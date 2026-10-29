@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data & privacy · TripLibreLab Docs</title>
+<meta name="description" content="What TripLibreLab reads from a TripLibre export, what it keeps, what a shared image contains, and the risks of sharing precise travel history.">
+<link rel="icon" href="../assets/triplibrelab-logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/docs.css?v=2">
+<script>try { const t = localStorage.getItem('hht-docs-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script src="../assets/docs.js?v=1" defer></script>
+</head>
+<body>
+<main class="dx-main"><article class="dx-content">
+<p class="eyebrow">Using TripLibreLab</p>
+<h1>Data &amp; privacy</h1>
+<p class="lede">TripLibreLab is designed to be local-first: no account, no server, and nothing shared unless you share it.
+This page describes that design. It will be updated to match the released app, including its App Store privacy disclosure.</p>
+
+<div class="callout note"><div class="ic">i</div>
+<p>TripLibreLab is not released yet, so the statements below describe how it is being built, not an audited result. Where
+behaviour has not been verified in the finished app it is marked <span class="status planned">Pending</span>.</p></div>
+
+<h2>The short version</h2>
+<div class="pillars">
+  <div><b>No account</b><span>Nothing to sign up for and nothing to log in to.</span></div>
+  <div><b>No upload</b><span>Your diary is read and processed on the phone. There is no TripLibreLab server.</span></div>
+  <div><b>Read-only</b><span>The export you import is opened read-only and never changed.</span></div>
+  <div><b>You share</b><span>An image leaves the phone only when you send it with the share sheet.</span></div>
+</div>
+
+<h2>What TripLibreLab reads</h2>
+<p>Only the file you pick in the Files app. iOS does not let an app see other files, and TripLibreLab asks for no location
+permission: it reads your history from the export, not from the phone's GPS.</p>
+<p>That file is TripLibre's <code>travel.sqlite</code> snapshot, which holds your <b>entire</b> TripLibre history, raw GPS
+points included, whatever range you chose when exporting. TripLibreLab reads the parts it needs to replay days.</p>
+
+<h2>What TripLibreLab keeps <span class="status planned">Pending</span></h2>
+<div class="table-wrap"><table>
+  <tr><th>Data</th><th>Where</th></tr>
+  <tr><td><b>Imported diary</b></td><td>In the app's own storage on your phone, so you don't have to import it again. Removable from inside the app; deleting the app removes it.</td></tr>
+  <tr><td><b>Share images</b></td><td>Created when you open the preview and handed to the share sheet. Where they go next is your choice.</td></tr>
+  <tr><td><b>Analytics</b></td><td>None planned. TripLibreLab is not intended to include an analytics or advertising SDK.</td></tr>
+</table></div>
+<p>Like any app data, what TripLibreLab keeps may be included in your iPhone or iCloud backups.</p>
+
+<h2>Network use <span class="status planned">Pending</span></h2>
+<p>The import, replay and share flow is designed to work with no network connection. Map tiles may be loaded by Apple's
+MapKit while you view a map; the exact list of network requests will be documented here before release.</p>
+
+<h2>What a shared image contains</h2>
+<p>Only what you see in the preview: a map of the day and the labels you chose to keep. Before sharing you can hide or
+generalise start and end places and leave out exact times. Nothing else from your diary is attached.</p>
+
+<h2>Risks of sharing travel history</h2>
+<p>Keeping data on the phone removes the server, not every risk.</p>
+<ul>
+  <li><b>Locations identify people.</b> The places where a day starts and ends are often home and work, and those two alone can be enough to identify someone.</li>
+  <li><b>Patterns add up.</b> Several shared days, even with redaction, can reveal a routine.</li>
+  <li><b>Exports travel.</b> A <code>travel.sqlite</code> file sent to someone else gives them your full history. Share images, not the export.</li>
+  <li><b>Sharing can't be undone.</b> Once an image is sent or posted, it may be copied, cached or kept.</li>
+</ul>
+
+<h2>Erasing your data <span class="status planned">Pending</span></h2>
+<p>Remove an imported diary from inside TripLibreLab, or delete the app to remove everything it stored. Your original
+TripLibre data and export files are not affected; manage those in TripLibre and the Files app (see TripLibre's
+<a href="https://triplibre.hhtdiary.org/docs/privacy.html">Privacy</a> page).</p>
+
+</article></main>
+</body>
+</html>

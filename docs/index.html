@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="triplibrelab">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TripLibreLab · Replay. Simulate. Explore.</title>
+<meta name="description" content="TripLibreLab is a companion to TripLibre, in development, that turns an exported travel diary into a day you can replay on a map and share after reviewing what it reveals. A product of HHT Diary.">
+<link rel="icon" href="assets/triplibrelab-logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css?v=2">
+<script>try { const t = localStorage.getItem('hht-docs-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script src="assets/site.js?v=1" defer></script>
+</head>
+<body>
+<main id="main">
+
+<section class="s-hero center" aria-labelledby="page-title">
+  <div class="wrap">
+    <p class="eyebrow">TripLibreLab for iOS · by HHT Diary</p>
+    <h1 class="title" id="page-title">Replay the days <span class="grad">TripLibre recorded.</span></h1>
+    <p class="lede">TripLibreLab turns a travel diary exported from <a class="link" href="https://triplibre.hhtdiary.org/">TripLibre</a>
+    into a day you can play back on a map, then share as a picture once you have hidden what you'd rather keep private.
+    TripLibre records your days; TripLibreLab is where you look back at them.</p>
+    <div class="actions">
+      <a class="btn primary" href="#how">How it works <span class="arr" aria-hidden="true">→</span></a>
+      <a class="btn" href="docs/">Read the docs</a>
+    </div>
+    <ul class="strip">
+      <li>In development</li><li>iOS</li><li>Free · Apache 2.0</li><li>No account</li><li>Reads TripLibre SQLite exports</li>
+    </ul>
+  </div>
+  <svg class="route-line" viewBox="0 0 1200 140" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M-10 128 C 160 98, 300 136, 460 114 S 760 92, 900 112 S 1120 134, 1210 100"/>
+    <circle cx="460" cy="114" r="5"/><circle cx="900" cy="112" r="5"/>
+  </svg>
+</section>
+
+<section class="section" id="how" aria-labelledby="how-title">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">How it works</p>
+      <h2 class="h2" id="how-title">Import. Replay. Share.</h2>
+      <p class="lede">The first release does one thing well: it takes a diary you already have and lets you watch a day of it
+      again. Everything happens on your iPhone, without an account, a server, or TripLibre running at the same time.</p>
+    </div>
+    <div class="grid four">
+      <div class="card"><p class="k">01 · export</p><h3>Export from TripLibre</h3><p>In TripLibre, <b>Settings › Create export</b> writes a folder that includes a SQLite snapshot of your diary.</p></div>
+      <div class="card"><p class="k">02 · import</p><h3>Open it in TripLibreLab</h3><p>Pick the file from the Files app. TripLibreLab checks that it can read it and, if not, tells you why.</p></div>
+      <div class="card"><p class="k">03 · replay</p><h3>Pick a day and press play</h3><p>The day's trips and stops appear in order on a timeline and a map. Play, pause and scrub through it.</p></div>
+      <div class="card"><p class="k">04 · share</p><h3>Review, then share</h3><p>Preview a summary image, hide or blur places and times you want to keep private, and share it with the iOS share sheet.</p></div>
+    </div>
+    <div class="callout"><div class="ic" aria-hidden="true">i</div>
+      <p>TripLibreLab is being built now. These steps describe the first release as planned; there are no screenshots yet
+      because the interface does not exist yet. See <a href="docs/getting-started.html">Getting started</a> for what is confirmed and what is still pending.</p></div>
+  </div>
+</section>
+
+<section class="section" id="features" aria-labelledby="features-title">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Scope</p>
+      <h2 class="h2" id="features-title">Replay first. Everything else later.</h2>
+      <p class="lede">Each version should be useful on its own. The first one replays and shares; simulation and
+      comparison are ideas for later, not promises.</p>
+    </div>
+    <div class="grid three">
+      <div class="card">
+        <p class="k"><span class="status progress">In progress</span></p>
+        <h3>Replay &amp; Share</h3>
+        <p>Import a TripLibre export, choose a recorded day, replay it on a map, and share a privacy-reviewed summary image.</p>
+      </div>
+      <div class="card">
+        <p class="k"><span class="status planned">Planned</span></p>
+        <h3>ReShape</h3>
+        <p>Make alternative versions of a day, such as leaving later or skipping a stop, under stated assumptions. Every generated journey is labelled synthetic.</p>
+      </div>
+      <div class="card">
+        <p class="k"><span class="status exploratory">Exploratory</span></p>
+        <h3>Advisory</h3>
+        <p>Compare alternatives against goals you choose, with "keep my original day" always one of the options. Trade-offs, not prescriptions.</p>
+      </div>
+    </div>
+    <p class="mt"><a class="link" href="roadmap/">See the roadmap →</a></p>
+  </div>
+</section>
+
+<section class="section" id="honest" aria-labelledby="honest-title">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">What you are looking at</p>
+      <h2 class="h2" id="honest-title">Recorded, replayed, or made up? Always labelled.</h2>
+      <p class="lede">A smooth animation can look more certain than the data behind it. TripLibreLab keeps four kinds of
+      movement apart and says which one is on screen.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="s-table">
+        <thead><tr><th scope="col">Kind</th><th scope="col">What it means</th><th scope="col">Status</th></tr></thead>
+        <tbody>
+          <tr><td>Observed</td><td>Trips, stops and GPS points as recorded and reconstructed by TripLibre.</td><td><span class="status progress">Release 1</span></td></tr>
+          <tr><td>Replayed</td><td>The animation between recorded points. Where only a trip's start and end are known, the connecting line is drawn as schematic, not as a measured path.</td><td><span class="status progress">Release 1</span></td></tr>
+          <tr><td>Synthetic</td><td>An alternative day generated from explicit assumptions. Not observed, and not a prediction of what you will do.</td><td><span class="status planned">Planned</span></td></tr>
+          <tr><td>Advisory</td><td>A comparison of alternatives against goals you set. An estimate with stated uncertainty, not a recommendation to change your life.</td><td><span class="status exploratory">Exploratory</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="family" aria-labelledby="family-title">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">The HHT Diary family</p>
+      <h2 class="h2" id="family-title">A companion, not a replacement.</h2>
+      <p class="lede">TripLibreLab does not record anything. It needs a diary from TripLibre, and keeps working on the copy you give it.</p>
+    </div>
+    <div class="grid three">
+      <a class="card" href="https://triplibre.hhtdiary.org/"><p class="k">records</p><h3>TripLibre</h3><p>The local-first travel diary for iPhone. Records where you go, rebuilds each day into visits, trips and modes, and exports it.</p><span class="go">triplibre.hhtdiary.org →</span></a>
+      <div class="card"><p class="k">replays</p><h3>TripLibreLab</h3><p>Imports a TripLibre export and turns it into something to watch, explore and share. Never collects location itself.</p></div>
+      <a class="card" href="https://hhtdiary.org/"><p class="k">organization</p><h3>HHT Diary</h3><p>The umbrella project behind both apps: open, personal tools for understanding everyday travel.</p><span class="go">hhtdiary.org →</span></a>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="privacy" aria-labelledby="privacy-title">
+  <div class="wrap">
+    <div class="grid two">
+      <div>
+        <p class="eyebrow">Privacy</p>
+        <h2 class="h2" id="privacy-title">Nothing leaves the phone unless you share it.</h2>
+        <p class="lede">TripLibreLab is designed to work offline, with no account and no server. It opens your export
+        read-only and never uploads it.</p>
+      </div>
+      <div class="prose">
+        <p>A day of travel can reveal where someone lives, works and sleeps, even without a name on it. That is why sharing
+        always goes through a preview where you can hide start and end places and exact times, and why nothing is shared
+        automatically.</p>
+        <p>The export you import from TripLibre is a complete copy of your diary, raw GPS points included. Treat the file
+        itself with care. The <a href="docs/privacy.html">Data &amp; privacy</a> page explains what TripLibreLab reads,
+        what it keeps, and what a shared image contains.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="status" aria-labelledby="status-title">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Release status</p>
+      <h2 class="h2" id="status-title">Not available yet.</h2>
+      <p class="lede">TripLibreLab is in early development. There is nothing to download today; this page will say so when there is.</p>
+    </div>
+    <div class="grid two">
+      <div class="card">
+        <p class="k"><span class="status progress">In progress</span></p>
+        <h3>First release: Replay &amp; Share</h3>
+        <p>Import, day picker, map replay and share preview, built in SwiftUI for iOS. Development happens in the open on
+        <a href="https://github.com/hhtdiary/TripLIbreLab">GitHub</a>.</p>
+      </div>
+      <div class="card">
+        <p class="k"><span class="status planned">Planned</span></p>
+        <h3>App Store</h3>
+        <p>Submission comes after the first release works on its own and passes testing. It depends on App Review, so
+        there is no date yet.</p>
+      </div>
+    </div>
+    <div class="callout"><div class="ic" aria-hidden="true">i</div>
+      <p>Want to be ready? Install <a href="https://triplibre.hhtdiary.org/#install">TripLibre</a> now. Any days it records
+      can be exported and replayed once TripLibreLab is out.</p></div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="learn-title">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Documentation</p>
+      <h2 class="h2" id="learn-title">Go deeper.</h2>
+    </div>
+    <div class="grid three">
+      <a class="card" href="docs/getting-started.html"><h3>Getting started</h3><p>What you need, and the path from a TripLibre export to a shared replay.</p><span class="go">Guide →</span></a>
+      <a class="card" href="docs/importing-data.html"><h3>Importing a TripLibre export</h3><p>Which file to use, how it is read, and what happens when it can't be.</p><span class="go">Import →</span></a>
+      <a class="card" href="docs/replay-and-share.html"><h3>Replay &amp; share</h3><p>How the map and timeline relate to your records, and how sharing protects them.</p><span class="go">Replay →</span></a>
+    </div>
+  </div>
+</section>
+
+</main>
+</body>
+</html>

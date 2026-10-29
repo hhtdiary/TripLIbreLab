@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Getting started · TripLibreLab Docs</title>
+<meta name="description" content="What you need for TripLibreLab and the path from a TripLibre export to a shared replay, with unfinished steps marked pending.">
+<link rel="icon" href="../assets/triplibrelab-logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/docs.css?v=2">
+<script>try { const t = localStorage.getItem('hht-docs-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script src="../assets/docs.js?v=1" defer></script>
+</head>
+<body>
+<main class="dx-main"><article class="dx-content">
+<p class="eyebrow">Get started</p>
+<h1>Getting started</h1>
+<p class="lede">The whole path in one page: get a diary out of TripLibre, open it in TripLibreLab, replay a day, and share
+it. Steps that have not been built and tested yet are marked <span class="status planned">Pending</span>.</p>
+
+<div class="callout warn"><div class="ic">!</div>
+<p>TripLibreLab is not available to download yet. This guide is written ahead of the first release so the workflow is clear;
+it will be checked step by step against the real app before release.</p></div>
+
+<h2>What you need</h2>
+<div class="table-wrap"><table>
+  <tr><th>Requirement</th><th>Details</th><th>Status</th></tr>
+  <tr><td><b>An iPhone</b></td><td>TripLibreLab is an iOS app. The minimum iOS version will be set before release.</td><td><span class="status planned">Pending</span></td></tr>
+  <tr><td><b>TripLibre</b></td><td>The source of your diary. See <a href="https://triplibre.hhtdiary.org/#install">how to install TripLibre</a>.</td><td><span class="status available">Available</span></td></tr>
+  <tr><td><b>A TripLibre export</b></td><td>At least one day recorded by TripLibre, exported as described below.</td><td><span class="status available">Available</span></td></tr>
+  <tr><td><b>Supported export versions</b></td><td>Which TripLibre database versions TripLibreLab reads will be listed once the data contract is verified.</td><td><span class="status planned">Pending</span></td></tr>
+</table></div>
+<p>You do not need an account, an internet connection, or a computer, and TripLibre does not need to be running.</p>
+
+<h2>1. Export a diary from TripLibre</h2>
+<p>In TripLibre, open <b>Settings › Create export</b>. TripLibre writes a timestamped folder such as
+<code>hht-export-20260927-120000/</code> to <i>Files › On My iPhone › TripLibre › Exports</i>. Inside it,
+<code>travel.sqlite</code> is a complete snapshot of your TripLibre database; that is the file TripLibreLab opens.
+TripLibre's <a href="https://triplibre.hhtdiary.org/docs/data.html">Data model &amp; export</a> page lists everything else in the folder.</p>
+<div class="callout note"><div class="ic">i</div>
+<p><code>travel.sqlite</code> contains your whole history, including raw GPS points, regardless of the range you chose for
+the export. Keep it somewhere private. See <a href="privacy.html">Data &amp; privacy</a>.</p></div>
+
+<h2>2. Import it into TripLibreLab <span class="status planned">Pending</span></h2>
+<ol class="steps">
+  <li><b>Open TripLibreLab</b>The first screen explains that your file is processed on the phone and offers to choose one.</li>
+  <li><b>Choose the file</b>Browse to the export folder in the Files picker and select <code>travel.sqlite</code>.</li>
+  <li><b>Wait for the check</b>TripLibreLab confirms it can read the file. If it can't, it says why. See
+    <a href="importing-data.html#when-a-file-cant-be-read">When a file can't be read</a>.</li>
+</ol>
+
+<h2>3. Choose a day and replay it <span class="status planned">Pending</span></h2>
+<ol class="steps">
+  <li><b>Pick a day</b>The day picker lists days that have travel records, with the number of trips on each.</li>
+  <li><b>Read the timeline</b>The day's trips and stops appear in the order they happened.</li>
+  <li><b>Press play</b>The day animates on the map. Pause, restart, or drag the scrubber to any moment. See
+    <a href="replay-and-share.html">Replay &amp; share</a> for what the lines on the map mean.</li>
+</ol>
+
+<h2>4. Share it <span class="status planned">Pending</span></h2>
+<ol class="steps">
+  <li><b>Open the share preview</b>TripLibreLab draws a summary image of the day.</li>
+  <li><b>Review what it shows</b>Hide or generalise start and end places and remove exact times. The preview is exactly the image that will be shared.</li>
+  <li><b>Share</b>Send it with the iOS share sheet. Nothing is uploaded unless you send it somewhere.</li>
+</ol>
+
+<h2>Next steps</h2>
+<div class="cards">
+  <a class="card" href="importing-data.html"><div class="k">import</div><h3>Importing a TripLibre export</h3><p>Compatibility, missing data and error messages.</p></a>
+  <a class="card" href="replay-and-share.html"><div class="k">replay</div><h3>Replay &amp; share</h3><p>Controls, schematic lines and redaction.</p></a>
+  <a class="card" href="faq.html"><div class="k">help</div><h3>FAQ &amp; troubleshooting</h3><p>Common questions and problems.</p></a>
+</div>
+
+</article></main>
+</body>
+</html>

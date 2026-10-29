@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Replay & share · TripLibreLab Docs</title>
+<meta name="description" content="How TripLibreLab's map and timeline relate to your recorded diary, which lines are measured and which are schematic, and how a replay is shared.">
+<link rel="icon" href="../assets/triplibrelab-logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/docs.css?v=2">
+<script>try { const t = localStorage.getItem('hht-docs-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script src="../assets/docs.js?v=1" defer></script>
+</head>
+<body>
+<main class="dx-main"><article class="dx-content">
+<p class="eyebrow">Using TripLibreLab</p>
+<h1>Replay &amp; share</h1>
+<p class="lede">A replay should look like your day without pretending to know more than your diary does. This page explains
+what is drawn, what is animated, and what ends up in a shared image.</p>
+
+<h2>The timeline and the map</h2>
+<p>A replay has two views of the same day. The <b>timeline</b> lists stays and trips in the order they happened, with their
+times. The <b>map</b> shows where they were. Both follow one clock: as the replay plays or you scrub, the current moment is
+highlighted on the timeline and the marker moves on the map.</p>
+<p>Everything in a replay comes from the diary you imported. TripLibreLab does not look up routes, add stops, or correct
+travel modes; corrections belong in TripLibre, followed by a fresh export.</p>
+
+<h2>Recorded points and animated movement</h2>
+<p>Between two recorded GPS points the marker has to move somehow, so the app animates it. That animation is not
+measurement. TripLibreLab draws three kinds of line differently:</p>
+<div class="table-wrap"><table>
+  <tr><th>On the map</th><th>Meaning</th></tr>
+  <tr><td><b>Solid route</b></td><td>The trip's recorded points, joined in order. The path is as good as the GPS behind it.</td></tr>
+  <tr><td><b>Dashed, schematic line</b></td><td>Only the trip's start and end are known. The line shows that a trip happened, not where it went.</td></tr>
+  <tr><td><b>Moving marker</b></td><td>The replay's current position. Between recorded points it is interpolated, so treat it as approximate.</td></tr>
+</table></div>
+<p>The exact styling will be documented with screenshots once the interface exists.</p>
+
+<h2>Playback controls <span class="status planned">Pending</span></h2>
+<div class="table-wrap"><table>
+  <tr><th>Control</th><th>What it does</th></tr>
+  <tr><td><b>Play / pause</b></td><td>Start or stop the replay at the current moment.</td></tr>
+  <tr><td><b>Restart</b></td><td>Go back to the start of the day.</td></tr>
+  <tr><td><b>Scrubber</b></td><td>Drag to any time of the day; the map and timeline follow.</td></tr>
+  <tr><td><b>Trip and stop labels</b></td><td>Tap an item on the timeline to jump to it.</td></tr>
+</table></div>
+
+<h2>Sharing a replay <span class="status planned">Pending</span></h2>
+<p>The first release shares a <b>static summary image</b> of a day. Video export is a candidate for a later release
+(see the <a href="../roadmap/">Roadmap</a>).</p>
+<ol class="steps">
+  <li><b>Open the share preview</b>TripLibreLab draws the image from the day you are replaying.</li>
+  <li><b>Choose what to reveal</b>Hide or generalise the start and end places, which are most often home and work, and leave out exact times.</li>
+  <li><b>Check the image</b>The preview is exactly what will be shared. Nothing is added afterwards.</li>
+  <li><b>Share it</b>Use the iOS share sheet. TripLibreLab never uploads or posts anything itself.</li>
+</ol>
+
+<h2>Before you share</h2>
+<div class="callout warn"><div class="ic">!</div>
+<p>A map of one day can be enough to work out where someone lives or works, even with no name on it. Hide the ends of the
+day, prefer a day that does not start and end at home, and remember that once an image is sent, you cannot take it back.
+More on the <a href="privacy.html">Data &amp; privacy</a> page.</p></div>
+
+</article></main>
+</body>
+</html>

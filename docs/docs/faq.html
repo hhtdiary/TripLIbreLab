@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAQ & troubleshooting · TripLibreLab Docs</title>
+<meta name="description" content="Common questions about TripLibreLab and what to do when an import or replay does not work.">
+<link rel="icon" href="../assets/triplibrelab-logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/docs.css?v=2">
+<script>try { const t = localStorage.getItem('hht-docs-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script src="../assets/docs.js?v=1" defer></script>
+</head>
+<body>
+<main class="dx-main"><article class="dx-content">
+<p class="eyebrow">Using TripLibreLab</p>
+<h1>FAQ &amp; troubleshooting</h1>
+<p class="lede">Short answers to common questions. If yours isn't here, open an
+<a href="https://github.com/hhtdiary/TripLIbreLab/issues">issue on GitHub</a>.</p>
+
+<h2>About the app</h2>
+
+<h3>Can I download TripLibreLab yet?</h3>
+<p>Not yet. It is in early development. The <a href="../#status">release status</a> on the homepage will change when there is something to install.</p>
+
+<h3>Do I need TripLibre?</h3>
+<p>Yes. TripLibreLab does not record location itself; it replays diaries that TripLibre recorded. You can
+<a href="https://triplibre.hhtdiary.org/#install">install TripLibre</a> now and start building up days to replay later.</p>
+
+<h3>Does TripLibreLab replace TripLibre?</h3>
+<p>No. TripLibre records, corrects and exports your diary. TripLibreLab only reads exports. You keep using TripLibre day to day.</p>
+
+<h3>Does it need an account or internet connection?</h3>
+<p>No account. The core import, replay and share flow is designed to work offline; map tiles may need a connection to load.</p>
+
+<h3>Is it free?</h3>
+<p>Yes, and open source under the Apache 2.0 license.</p>
+
+<h3>Will it predict where I'll go or tell me how to travel?</h3>
+<p>No. The first release only replays what was recorded. Simulation and comparison are planned or exploratory ideas (see the
+<a href="../roadmap/">Roadmap</a>), and even then a synthetic day is a model's output under stated assumptions, not a
+prediction of your behaviour or a recommendation.</p>
+
+<h2>Troubleshooting <span class="status planned">Pending</span></h2>
+<p>These answers describe intended behaviour and will be checked against the released app.</p>
+
+<h3>The file won't import</h3>
+<p>Make sure you picked <code>travel.sqlite</code> from a TripLibre export folder, not a CSV or JSON file. If the app reports
+an unsupported version, update TripLibre and TripLibreLab and export again. See
+<a href="importing-data.html#when-a-file-cant-be-read">When a file can't be read</a>.</p>
+
+<h3>A day I expected is missing</h3>
+<p>Only days with travel records are listed. If TripLibre didn't record on that day, or the data is in a newer export, make a fresh export.</p>
+
+<h3>A trip is a straight dashed line</h3>
+<p>That trip has no recorded route points, only a start and end, so it is drawn as a schematic line. It shows that a trip
+happened, not the path. See <a href="replay-and-share.html#recorded-points-and-animated-movement">Recorded points and animated movement</a>.</p>
+
+<h3>A trip has the wrong mode or place name</h3>
+<p>TripLibreLab shows the diary as exported. Fix it in TripLibre, then export and import again.</p>
+
+</article></main>
+</body>
+</html>

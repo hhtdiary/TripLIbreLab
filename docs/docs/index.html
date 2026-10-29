@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overview · TripLibreLab Docs</title>
+<meta name="description" content="What TripLibreLab is, how it relates to TripLibre, and where to start in its documentation.">
+<link rel="icon" href="../assets/triplibrelab-logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/docs.css?v=2">
+<script>try { const t = localStorage.getItem('hht-docs-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script src="../assets/docs.js?v=1" defer></script>
+</head>
+<body>
+<main class="dx-main"><article class="dx-content home">
+<div class="hero">
+  <div>
+    <p class="eyebrow">Documentation</p>
+    <h1>TripLibreLab docs</h1>
+  </div>
+  <img class="logo" src="../assets/triplibrelab-logo.svg" alt="TripLibreLab logo">
+</div>
+<p class="lede">How to bring a travel diary from <a href="https://triplibre.hhtdiary.org/">TripLibre</a> into
+<a href="../">TripLibreLab</a>, replay a day of it, and share it without giving away more than you mean to. For where the
+project is heading, see the <a href="../roadmap/">Roadmap</a>.</p>
+
+<div class="actions">
+  <a class="btn primary" href="getting-started.html">Getting started →</a>
+  <a class="btn" href="privacy.html">Data &amp; privacy</a>
+  <a class="btn" href="https://github.com/hhtdiary/TripLIbreLab">View on GitHub</a>
+</div>
+
+<h2>What TripLibreLab is</h2>
+<p>TripLibreLab is a companion app to TripLibre, in development for iOS. TripLibre records where you go and keeps it as a
+travel diary: the visits, trips and travel modes of each day. TripLibreLab takes a diary you export from TripLibre and turns
+it into something you can watch again, explore and share.</p>
+<p>It is a separate app, not a new version of TripLibre. It records no location, needs no account, and works with a copy of
+your data that you choose to give it.</p>
+
+<div class="callout note"><div class="ic">i</div>
+<p>TripLibreLab is not released yet. These docs describe the first release as it is being built. Anything not yet built
+and tested is marked <span class="status planned">Pending</span>, and there are no screenshots until the real interface exists.</p></div>
+
+<h2>The first release at a glance</h2>
+<div class="pillars">
+  <div><b>Import</b><span>Open a TripLibre SQLite export from the Files app. Read-only; the original is never changed.</span></div>
+  <div><b>Pick a day</b><span>See which days have travel records, and how many trips each one has.</span></div>
+  <div><b>Replay</b><span>Watch the day's trips and stops in order on a map, with play, pause and a scrubber.</span></div>
+  <div><b>Share</b><span>Preview a summary image, hide sensitive places and times, then share it yourself.</span></div>
+</div>
+
+<h2>Read in order</h2>
+<p class="muted">The docs as a day in a diary: four stops, joined by short trips.</p>
+<ol class="route">
+  <li class="stop" style="--fill:#ffc93c"><a href="getting-started.html">
+    <span class="pin">1</span>
+    <span class="body"><b>Getting started <span class="toon-badge" style="background:#fff">start here</span></b><small>What you need, and the whole path at a glance.</small></span>
+    <span class="go">→</span></a></li>
+  <li class="leg"><span class="toon-chip" style="background:#8bdb5e">🚶</span>Walk · 3 min read</li>
+  <li class="stop" style="--fill:#8bdb5e"><a href="importing-data.html">
+    <span class="pin">2</span>
+    <span class="body"><b>Importing a TripLibre export</b><small>Which file to use and what happens when it can't be read.</small></span>
+    <span class="go">→</span></a></li>
+  <li class="leg"><span class="toon-chip" style="background:#ffc93c">🚲</span>Bike · 4 min read</li>
+  <li class="stop" style="--fill:#5c9bff"><a href="replay-and-share.html">
+    <span class="pin">3</span>
+    <span class="body"><b>Replay &amp; share</b><small>Recorded points versus animation, and how sharing works.</small></span>
+    <span class="go">→</span></a></li>
+  <li class="leg"><span class="toon-chip" style="background:#5c9bff">🚇</span>Subway · 3 min read</li>
+  <li class="stop" style="--fill:#b596ff"><a href="privacy.html">
+    <span class="pin">4</span>
+    <span class="body"><b>Data &amp; privacy <span class="toon-badge" style="background:#ff6b4a">destination</span></b><small>What is read, what is kept, and what a shared image reveals.</small></span>
+    <span class="go">→</span></a></li>
+</ol>
+
+<h2>Words used in these docs</h2>
+<div class="table-wrap"><table>
+  <tr><th>Term</th><th>Meaning</th></tr>
+  <tr><td><b>Travel diary</b></td><td>A day-by-day record of where you stayed and how you travelled between places. TripLibre builds one automatically from your phone's location.</td></tr>
+  <tr><td><b>Trip</b> and <b>stay</b></td><td>A trip is a movement from one place to another; a stay (or stop, or visit) is time spent in one place.</td></tr>
+  <tr><td><b>SQLite</b></td><td>A common file format for a small database: a single file with tables in it. TripLibre's export includes one.</td></tr>
+  <tr><td><b>Replay</b></td><td>Playing a recorded day back as an animation on a map.</td></tr>
+  <tr><td><b>Synthetic</b></td><td>Generated by a model rather than recorded. Used only in planned future features, and always labelled.</td></tr>
+  <tr><td><b>Agent-based simulation</b></td><td>A model in which simulated travellers follow simple rules and a day of travel emerges from them. Planned for Phase 2.</td></tr>
+</table></div>
+
+<h2>Need help?</h2>
+<p>Start with the <a href="faq.html">FAQ &amp; troubleshooting</a>. Questions about recording and exporting belong to
+TripLibre, whose <a href="https://triplibre.hhtdiary.org/docs/">documentation</a> covers them. Anything else, open an
+<a href="https://github.com/hhtdiary/TripLIbreLab/issues">issue on GitHub</a>.</p>
+
+</article></main>
+</body>
+</html>

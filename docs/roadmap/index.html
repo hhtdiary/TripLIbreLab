@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" data-brand="triplibrelab">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roadmap · TripLibreLab</title>
+<meta name="description" content="Where TripLibreLab is going: Replay & Share first, then ReShape for synthetic alternatives, then Advisory for comparing them. Future phases are proposals, not commitments.">
+<link rel="icon" href="../assets/triplibrelab-logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/site.css?v=2">
+<script>try { const t = localStorage.getItem('hht-docs-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script src="../assets/site.js?v=1" defer></script>
+</head>
+<body>
+<main id="main">
+
+<section class="s-hero" aria-labelledby="page-title">
+  <div class="wrap">
+    <p class="eyebrow">Roadmap</p>
+    <h1 class="title" id="page-title">Replay. <span class="grad">Simulate. Explore.</span></h1>
+    <p class="lede">Three phases, each useful on its own. Only the first is being built. The other two are proposals that
+    may change or never ship, and nothing here is a promise of a feature or a date.</p>
+    <ul class="strip">
+      <li>Phase 1 · in progress</li><li>Phase 2 · planned</li><li>Phase 3 · exploratory</li>
+    </ul>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="phases-title">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Phases</p>
+      <h2 class="h2" id="phases-title">From storytelling to a mobility sandbox.</h2>
+      <div class="legend mt">
+        <span><span class="status available">Available</span> released</span>
+        <span><span class="status progress">In progress</span> being built</span>
+        <span><span class="status planned">Planned</span> intended, not started</span>
+        <span><span class="status exploratory">Exploratory</span> an idea under study</span>
+      </div>
+    </div>
+
+    <div class="stream">
+      <div>
+        <p class="num">Phase 1 · <span class="status progress">In progress</span></p>
+        <h3>Replay &amp; Share</h3>
+        <p class="why">A standalone travel-diary storytelling app. Import a TripLibre export, pick a day, watch it again,
+        and share a summary after reviewing what it reveals.</p>
+        <p class="why">Done when a user can do all of that locally, with no account, no backend, and TripLibre not running.</p>
+      </div>
+      <ul class="rm-list">
+        <li class="rm-item"><b>Import from Files</b><span class="status progress">In progress</span>
+          <p>Choose a TripLibre SQLite export with the iOS Files picker. The file is opened read-only.</p></li>
+        <li class="rm-item"><b>Compatibility check</b><span class="status progress">In progress</span>
+          <p>Check the database and its schema version before reading, and explain in plain words why a file can't be used.</p></li>
+        <li class="rm-item"><b>Day picker &amp; timeline</b><span class="status progress">In progress</span>
+          <p>List recorded days with their trip counts, then show a day's trips and stops in order.</p></li>
+        <li class="rm-item"><b>Map replay</b><span class="status progress">In progress</span>
+          <p>Play, pause, restart and scrub. Recorded geometry when it exists; a clearly schematic line when only endpoints do.</p></li>
+        <li class="rm-item"><b>Share card with redaction</b><span class="status progress">In progress</span>
+          <p>A static summary image. Hide or generalise start and end places and exact times, see the exact output, then share.</p></li>
+        <li class="rm-item"><b>Video export</b><span class="status planned">Planned</span>
+          <p>A short replay video. A candidate for the release after the first one.</p></li>
+      </ul>
+    </div>
+
+    <div class="stream">
+      <div>
+        <p class="num">Phase 2 · <span class="status planned">Planned</span></p>
+        <h3>ReShape</h3>
+        <p class="why">An interactive sandbox for "what if?". Build alternative versions of a recorded day and set them next
+        to the original.</p>
+        <p class="why">A synthetic day is the output of a model and its assumptions. It is not observed behaviour and not a
+        prediction of what any person will do.</p>
+      </div>
+      <ul class="rm-list">
+        <li class="rm-item"><b>Edit a day</b><span class="status planned">Planned</span>
+          <p>Change departure times, stop durations, activity order and selected travel assumptions.</p></li>
+        <li class="rm-item"><b>Agent-based simulation</b><span class="status planned">Planned</span>
+          <p>Explicitly parameterised agent-based or random (stochastic) simulation, with every parameter visible.
+          In an agent-based model, a simulated traveller follows simple rules and the day emerges from them.</p></li>
+        <li class="rm-item"><b>Synthetic labels everywhere</b><span class="status planned">Planned</span>
+          <p>Every generated journey is marked synthetic on the map, the timeline and anything shared.</p></li>
+        <li class="rm-item"><b>Compare with the original</b><span class="status planned">Planned</span>
+          <p>Put a simulated day beside the recorded one; the recorded diary is never changed.</p></li>
+      </ul>
+    </div>
+
+    <div class="stream">
+      <div>
+        <p class="num">Phase 3 · <span class="status exploratory">Exploratory</span></p>
+        <h3>Advisory</h3>
+        <p class="why">Decision support that you steer. You choose what matters and see the trade-offs; the app does not
+        decide what an "optimal" day is.</p>
+        <p class="why">No claims of real-world savings without validated inputs and models.</p>
+      </div>
+      <ul class="rm-list">
+        <li class="rm-item"><b>Your objectives</b><span class="status exploratory">Exploratory</span>
+          <p>Time, distance, cost, emissions, convenience, or your own mix of priorities.</p></li>
+        <li class="rm-item"><b>Your constraints</b><span class="status exploratory">Exploratory</span>
+          <p>Respect activity schedules and other limits you set.</p></li>
+        <li class="rm-item"><b>"Keep my original day" baseline</b><span class="status exploratory">Exploratory</span>
+          <p>Doing nothing is always one of the options, and every alternative is compared against the unchanged diary.</p></li>
+        <li class="rm-item"><b>Explained results</b><span class="status exploratory">Exploratory</span>
+          <p>Show the assumptions, uncertainty and trade-offs behind every comparison.</p></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="not-title">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Out of scope</p>
+      <h2 class="h2" id="not-title">What TripLibreLab will not become.</h2>
+    </div>
+    <ol class="nlist">
+      <li><div><b>A second TripLibre</b>Recording location stays TripLibre's job. TripLibreLab only reads exports.</div></li>
+      <li><div><b>A navigation app</b>No turn-by-turn directions and no live routing.</div></li>
+      <li><div><b>A social network</b>No accounts, feeds or cloud sync. Sharing is a file you choose to send.</div></li>
+      <li><div><b>A life optimiser</b>Alternatives come with their trade-offs; the choice stays yours.</div></li>
+    </ol>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="cta">
+      <p class="eyebrow">Follow along</p>
+      <h2 class="h2">Built in the open.</h2>
+      <p>Progress, issues and decisions live on GitHub. The wider HHT Diary plan, including TripLibre, is on the
+      <a class="link" href="https://hhtdiary.org/roadmap/">HHT Diary roadmap</a>.</p>
+      <div class="actions">
+        <a class="btn primary" href="https://github.com/hhtdiary/TripLIbreLab">View on GitHub <span class="arr" aria-hidden="true">→</span></a>
+        <a class="btn" href="../docs/">Read the docs</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+</body>
+</html>

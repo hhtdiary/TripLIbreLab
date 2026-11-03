@@ -1,0 +1,15 @@
+{
+  "globs": ["**/*.md"],
+  "ignores": ["node_modules/**", ".build/**", ".claude/**", "log/**"],
+  "config": {
+    "default": true,
+    // Prose is wrapped by hand (or not at all); tables are long by nature.
+    "MD013": false,
+    "MD060": false,
+    // Inline HTML is used on purpose in a few places.
+    "MD033": false,
+    "MD041": false,
+    "MD036": false,
+    "MD024": { "siblings_only": true }
+  }
+}

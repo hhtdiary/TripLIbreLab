@@ -6,7 +6,7 @@ Build the public documentation website for **TripLibreLab**, an HHTdiary project
 
 **Scope of this document:** website structure and content requirements only. This is not an HTML/CSS/JavaScript implementation plan and does not authorize building the iOS app.
 
-**Reference:** https://triplibre.hhtdiary.org
+**Reference:** <https://triplibre.hhtdiary.org>
 
 Before implementation, inspect the current TripLibre website/repository and map its actual navigation, page templates, and components. Do not assume that the proposed sections below already exist in TripLibre.
 

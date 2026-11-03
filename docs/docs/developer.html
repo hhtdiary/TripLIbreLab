@@ -30,9 +30,10 @@ Everything below is checkable from the repository today.</p></div>
   <tr><th>Path</th><th>What it holds</th></tr>
   <tr><td><code>design/</code></td><td>The product framework, the V0.1 scope (<code>first-step.md</code>) and the website plan. These are the requirements; nothing is built that they do not call for.</td></tr>
   <tr><td><code>docs/</code></td><td>This website, served by GitHub Pages from the <code>main</code> branch. Also holds <code>sqlite-data-contract.md</code>, the full data contract in Markdown.</td></tr>
-  <tr><td><code>tools/</code></td><td>Python scripts: <code>make_fixtures.py</code> builds test databases, <code>inspect_export.py</code> checks any TripLibre export against the contract, <code>triplibre_schema.sql</code> is TripLibre's schema copied verbatim.</td></tr>
+  <tr><td><code>tools/</code></td><td>Python scripts: <code>make_fixtures.py</code> builds test databases, <code>inspect_export.py</code> checks any TripLibre export against the contract, <code>triplibre_schema.sql</code> is TripLibre's schema copied verbatim, <code>tests/</code> holds the contract tests.</td></tr>
   <tr><td><code>fixtures/</code></td><td>Synthetic <code>travel.sqlite</code> files for importer tests. No real person's data.</td></tr>
   <tr><td><code>log/</code></td><td>Transcripts of the AI-assisted sessions in which the site was designed, kept for provenance.</td></tr>
+  <tr><td><code>Makefile</code>, <code>.github/workflows/</code>, lint configs</td><td>The checks that run on every pull request; see <a href="#checks-that-run-on-every-pull-request">below</a>.</td></tr>
   <tr><td><em>(coming)</em></td><td>The iOS app: a SwiftUI project with a separate read-only import package. Its layout will be documented here when it exists.</td></tr>
 </table></div>
 
@@ -86,7 +87,7 @@ no coordinates or names, so it can be pasted into an issue. Until then the contr
 against a device.</p></div>
 
 <h2>Tools</h2>
-<p>Both scripts need only Python 3.9 or newer; there is nothing to install.</p>
+<p>Both scripts need only Python 3.10 or newer; there is nothing to install. <code>make help</code> lists every shortcut.</p>
 
 <h3>Build the fixtures</h3>
 <pre data-lang="bash"><code>python3 tools/make_fixtures.py          # writes fixtures/*.sqlite, deterministic</code></pre>
@@ -123,6 +124,26 @@ counts:
   visits                 7 active,     0 soft-deleted,   1 ongoing
   trips w/ polyline      5   with has_gap     1
 diary days:      1  (2026-09-15 … 2026-09-15)</code></pre>
+
+<h2>Checks that run on every pull request</h2>
+<p>The repository carries the same continuous-integration setup as TripLibre, minus the Swift jobs (SwiftLint,
+SwiftFormat, the Xcode build and the Swift test suite) and the SwiftUI accessibility workflow, because there is no Swift
+code here yet. They return with the app. Everything runs on GitHub Actions and locally with <code>make ci</code>.</p>
+<div class="table-wrap"><table>
+  <tr><th>Job</th><th>What it checks</th><th>Locally</th></tr>
+  <tr><td><b>Lint</b></td><td>ESLint on the site scripts, Stylelint on the stylesheets, html-validate with its accessibility rules on every page, markdownlint on the Markdown, Ruff on the Python tools.</td><td><code>make lint</code></td></tr>
+  <tr><td><b>Docs accessibility</b></td><td>axe-core against every page in light and dark theme, WCAG 2.1 AA, with third-party requests blocked so the result does not depend on the network.</td><td><code>make a11y</code></td></tr>
+  <tr><td><b>Data contract</b></td><td>The committed fixtures are byte-identical to what <code>make_fixtures.py</code> produces; the contract tests pass (inspector verdicts for every fixture, the sample day's shape, polyline round trip); the inspector's verdict is printed for each fixture.</td><td><code>make fixtures-check</code>, <code>make test</code>, <code>make contract-check</code></td></tr>
+  <tr><td><b>CodeQL</b></td><td>Security analysis of the workflows, the Python tools and the site scripts, on every push to <code>main</code>, every pull request, and weekly.</td><td>—</td></tr>
+  <tr><td><b>PR preview</b></td><td>A Vercel preview of the site for pull requests that touch <code>docs/</code>, with the URL posted as a comment. Needs the <code>VERCEL_*</code> repository secrets; until they exist the job reports "not configured" and passes.</td><td>—</td></tr>
+</table></div>
+<p>Configuration lives at the repository root, named as TripLibre names it: <code>package.json</code>, <code>eslint.config.js</code>,
+<code>.stylelintrc.json</code>, <code>.htmlvalidate.json</code>, <code>.markdownlint-cli2.jsonc</code>, <code>ruff.toml</code>,
+<code>scripts/a11y.js</code>, <code>vercel.json</code>, and the workflows in <code>.github/workflows/</code>. The Python tests
+are in <code>tools/tests/</code> and use only the standard library's <code>unittest</code>.</p>
+<p>Two stylesheet blocks are marked with a <code>stylelint-disable no-duplicate-selectors</code> comment: the
+"notebook" theme layers restyle selectors defined earlier in the same file on purpose, so the base styles stay in step
+with TripLibre's. New rules outside those blocks are still checked.</p>
 
 <h2>When TripLibre changes its schema</h2>
 <p>TripLibre's migrations only ever add tables and columns, and its codes are never renamed, so an older importer keeps

@@ -38,7 +38,6 @@ DAY (travel-sample, local date 2026-09-15, America/New_York):
 from __future__ import annotations
 
 import math
-import os
 import random
 import sqlite3
 import sys

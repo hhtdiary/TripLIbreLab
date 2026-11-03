@@ -74,7 +74,8 @@ def main(argv: list[str]) -> int:
 
     # 1. Is it a SQLite database at all? (header check before any SQL)
     try:
-        header = path.open("rb").read(100)
+        with path.open("rb") as fh:
+            header = fh.read(100)
     except OSError as e:
         return fail(f"cannot read file: {e}")
     if not header.startswith(b"SQLite format 3\x00"):
@@ -139,8 +140,11 @@ def main(argv: list[str]) -> int:
         print(f"  trip_segments    {count('SELECT COUNT(*) FROM trip_segments'):>7}")
     if "raw_location_points" in tables:
         print(f"  raw points       {count('SELECT COUNT(*) FROM raw_location_points'):>7}")
-    print(f"  trips w/ polyline{count('SELECT COUNT(*) FROM trips WHERE deleted = 0 AND route_polyline IS NOT NULL AND route_polyline != \"\"'):>7}   with has_gap {count('SELECT COUNT(*) FROM trips WHERE deleted = 0 AND has_gap = 1'):>5}")
-    print(f"  trips w/o visits {count('SELECT COUNT(*) FROM trips WHERE deleted = 0 AND (origin_visit_id IS NULL OR destination_visit_id IS NULL)'):>7}   (manual/imported history: fall back to *_place_id)")
+    with_poly = count("SELECT COUNT(*) FROM trips WHERE deleted = 0 AND route_polyline IS NOT NULL AND route_polyline != ''")
+    with_gap = count("SELECT COUNT(*) FROM trips WHERE deleted = 0 AND has_gap = 1")
+    no_visits = count("SELECT COUNT(*) FROM trips WHERE deleted = 0 AND (origin_visit_id IS NULL OR destination_visit_id IS NULL)")
+    print(f"  trips w/ polyline{with_poly:>7}   with has_gap {with_gap:>5}")
+    print(f"  trips w/o visits {no_visits:>7}   (manual/imported history: fall back to *_place_id)")
     tzs = [r[0] for r in con.execute("SELECT DISTINCT tz FROM trips WHERE deleted = 0")]
     print(f"  time zones       {len(tzs)} distinct in trips" + ("  (includes NULL)" if None in tzs else ""))
     sources = [f"{r[0]}={r[1]}" for r in con.execute("SELECT source, COUNT(*) FROM trips WHERE deleted = 0 GROUP BY source")]

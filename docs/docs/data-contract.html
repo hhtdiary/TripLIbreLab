@@ -130,7 +130,7 @@ ORDER BY t.departure_ts;</code></pre>
 </ul>
 <pre data-lang="sql"><code>SELECT id, place_id, arrival_ts, departure_ts, lat, lon, purpose, user_status, tz
 FROM visits
-WHERE arrival_ts <= :day_end_utc AND (departure_ts IS NULL OR departure_ts >= :day_start_utc) AND deleted = 0
+WHERE arrival_ts &lt;= :day_end_utc AND (departure_ts IS NULL OR departure_ts &gt;= :day_start_utc) AND deleted = 0
 ORDER BY arrival_ts;</code></pre>
 
 <h3>TrackPoint ← raw_location_points</h3>
@@ -139,7 +139,7 @@ raw points to trips; the only link is time, and the table can hold hundreds of t
 by trip window and never as a whole.</p>
 <pre data-lang="sql"><code>SELECT ts, lat, lon, h_accuracy, speed, course, source
 FROM raw_location_points
-WHERE ts >= :trip_departure_ts AND ts <= :trip_arrival_ts
+WHERE ts &gt;= :trip_departure_ts AND ts &lt;= :trip_arrival_ts
 ORDER BY ts;</code></pre>
 
 <h3>DiaryDay ← derived</h3>

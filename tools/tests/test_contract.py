@@ -1,14 +1,13 @@
 """
 Contract tests for the Python tooling. Run: python3 -m unittest discover -s tools/tests -v   (or `make test`).
 
-They check that the committed fixtures are exactly what make_fixtures.py produces, that inspect_export.py
+They check that the committed fixtures have the same content as what make_fixtures.py produces, that inspect_export.py
 gives the verdict the data contract promises for every fixture, and that the sample fixture has the shape
 docs/sqlite-data-contract.md describes (the same facts the Swift importer's tests will assert later).
 """
 
 from __future__ import annotations
 
-import hashlib
 import io
 import sqlite3
 import sys
@@ -20,6 +19,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
 
+import check_fixtures  # noqa: E402
 import inspect_export  # noqa: E402
 import make_fixtures  # noqa: E402
 
@@ -35,10 +35,6 @@ EXPECTED_VERDICT = {  # exit status of inspect_export: 0 = supported, 2 = unsupp
 }
 
 
-def sha(p: Path) -> str:
-    return hashlib.sha256(p.read_bytes()).hexdigest()
-
-
 def inspect(name: str, *args: str) -> tuple[int, str]:
     out = io.StringIO()
     with redirect_stdout(out):
@@ -48,13 +44,33 @@ def inspect(name: str, *args: str) -> tuple[int, str]:
 
 class FixturesAreReproducible(unittest.TestCase):
     def test_committed_fixtures_match_generator(self):
+        # Compared by content, not bytes: SQLite writes its own version number into the file header, so the same
+        # generator gives different bytes on a machine with a different SQLite build (that is what broke CI first).
         with tempfile.TemporaryDirectory() as d:
             with redirect_stdout(io.StringIO()):
                 make_fixtures.main(Path(d))
-            built = {p.name: sha(p) for p in Path(d).glob("*.sqlite")}
-        committed = {p.name: sha(p) for p in FIXTURES.glob("*.sqlite")}
-        self.assertEqual(set(built), set(EXPECTED_VERDICT), "fixture list drifted from the test table")
-        self.assertEqual(built, committed, "fixtures/ is out of date: run python3 tools/make_fixtures.py and commit")
+            built = {p.name for p in Path(d).glob("*.sqlite")}
+            self.assertEqual(built, set(EXPECTED_VERDICT), "fixture list drifted from the test table")
+            self.assertEqual(built, {p.name for p in FIXTURES.glob("*.sqlite")}, "fixtures/ has a different file list")
+            for name in sorted(built):
+                with self.subTest(fixture=name):
+                    diffs = check_fixtures.same(FIXTURES / name, Path(d) / name)
+                    self.assertEqual(diffs, [], f"{name} is out of date: run python3 tools/make_fixtures.py and commit")
+
+    def test_content_comparison_ignores_header_version_but_not_data(self):
+        sample = FIXTURES / "travel-sample.sqlite"
+        with tempfile.TemporaryDirectory() as d:
+            restamped = Path(d) / "restamped.sqlite"
+            raw = bytearray(sample.read_bytes())
+            raw[96:100] = (3045000).to_bytes(4, "big")  # pretend another SQLite build wrote it
+            restamped.write_bytes(raw)
+            self.assertEqual(check_fixtures.same(sample, restamped), [])
+            edited = Path(d) / "edited.sqlite"
+            edited.write_bytes(sample.read_bytes())
+            con = sqlite3.connect(edited)
+            con.execute("UPDATE trips SET distance_m = distance_m + 1 WHERE rowid = 1")
+            con.commit(); con.close()
+            self.assertTrue(any(d.startswith("table trips") for d in check_fixtures.same(sample, edited)))
 
     def test_exports_are_rollback_journal_files(self):
         # VACUUM INTO output opens read-only without -wal/-shm sidecars (contract §1).

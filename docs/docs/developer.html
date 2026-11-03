@@ -30,7 +30,7 @@ Everything below is checkable from the repository today.</p></div>
   <tr><th>Path</th><th>What it holds</th></tr>
   <tr><td><code>design/</code></td><td>The product framework, the V0.1 scope (<code>first-step.md</code>) and the website plan. These are the requirements; nothing is built that they do not call for.</td></tr>
   <tr><td><code>docs/</code></td><td>This website, served by GitHub Pages from the <code>main</code> branch. Also holds <code>sqlite-data-contract.md</code>, the full data contract in Markdown.</td></tr>
-  <tr><td><code>tools/</code></td><td>Python scripts: <code>make_fixtures.py</code> builds test databases, <code>inspect_export.py</code> checks any TripLibre export against the contract, <code>triplibre_schema.sql</code> is TripLibre's schema copied verbatim, <code>tests/</code> holds the contract tests.</td></tr>
+  <tr><td><code>tools/</code></td><td>Python scripts: <code>make_fixtures.py</code> builds test databases, <code>inspect_export.py</code> checks any TripLibre export against the contract, <code>check_fixtures.py</code> compares two fixture sets by content, <code>triplibre_schema.sql</code> is TripLibre's schema copied verbatim, <code>tests/</code> holds the contract tests.</td></tr>
   <tr><td><code>fixtures/</code></td><td>Synthetic <code>travel.sqlite</code> files for importer tests. No real person's data.</td></tr>
   <tr><td><code>log/</code></td><td>Transcripts of the AI-assisted sessions in which the site was designed, kept for provenance.</td></tr>
   <tr><td><code>Makefile</code>, <code>.github/workflows/</code>, lint configs</td><td>The checks that run on every pull request; see <a href="#checks-that-run-on-every-pull-request">below</a>.</td></tr>
@@ -93,7 +93,7 @@ against a device.</p></div>
 <pre data-lang="bash"><code>python3 tools/make_fixtures.py          # writes fixtures/*.sqlite, deterministic</code></pre>
 <p>The script applies <code>tools/triplibre_schema.sql</code> migration by migration, sets <code>user_version</code>
 after each one, inserts a synthetic Philadelphia day, and finishes with <code>VACUUM INTO</code>, the same call
-TripLibre's exporter makes. Running it twice gives byte-identical files, so a changed fixture always shows up in a diff.</p>
+TripLibre's exporter makes. Running it twice on one machine gives byte-identical files; across machines only the SQLite version stamped in the file header changes, which is why CI compares fixtures by content (<code>tools/check_fixtures.py</code>) rather than by bytes.</p>
 <div class="table-wrap"><table>
   <tr><th>Fixture</th><th>Case from the first-step QA list</th></tr>
   <tr><td><code>travel-sample.sqlite</code></td><td>Valid sample. Schema v6; one day with six trips covering every geometry level, a trip crossing midnight, a stay that is still ongoing, a multimodal trip with segments, a soft-deleted trip, a merged place, a stamp and an expense.</td></tr>
@@ -133,7 +133,7 @@ code here yet. They return with the app. Everything runs on GitHub Actions and l
   <tr><th>Job</th><th>What it checks</th><th>Locally</th></tr>
   <tr><td><b>Lint</b></td><td>ESLint on the site scripts, Stylelint on the stylesheets, html-validate with its accessibility rules on every page, markdownlint on the Markdown, Ruff on the Python tools.</td><td><code>make lint</code></td></tr>
   <tr><td><b>Docs accessibility</b></td><td>axe-core against every page in light and dark theme, WCAG 2.1 AA, with third-party requests blocked so the result does not depend on the network.</td><td><code>make a11y</code></td></tr>
-  <tr><td><b>Data contract</b></td><td>The committed fixtures are byte-identical to what <code>make_fixtures.py</code> produces; the contract tests pass (inspector verdicts for every fixture, the sample day's shape, polyline round trip); the inspector's verdict is printed for each fixture.</td><td><code>make fixtures-check</code>, <code>make test</code>, <code>make contract-check</code></td></tr>
+  <tr><td><b>Data contract</b></td><td>The committed fixtures have the same content (schema, rows, <code>user_version</code>, journal header) as what <code>make_fixtures.py</code> produces, compared with <code>tools/check_fixtures.py</code>; the contract tests pass (inspector verdicts for every fixture, the sample day's shape, polyline round trip); the inspector's verdict is printed for each fixture.</td><td><code>make fixtures-check</code>, <code>make test</code>, <code>make contract-check</code></td></tr>
   <tr><td><b>CodeQL</b></td><td>Security analysis of the workflows, the Python tools and the site scripts, on every push to <code>main</code>, every pull request, and weekly.</td><td>—</td></tr>
   <tr><td><b>PR preview</b></td><td>A Vercel preview of the site for pull requests that touch <code>docs/</code>, with the URL posted as a comment. Needs the <code>VERCEL_*</code> repository secrets; until they exist the job reports "not configured" and passes.</td><td>—</td></tr>
 </table></div>

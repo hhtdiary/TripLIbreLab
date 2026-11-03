@@ -10,10 +10,9 @@ help:            ## list targets
 fixtures:        ## regenerate fixtures/*.sqlite from tools/triplibre_schema.sql (deterministic; commit the result)
 	python3 tools/make_fixtures.py
 
-fixtures-check:  ## fail if fixtures/ differs from what make_fixtures.py produces
+fixtures-check:  ## fail if fixtures/ differs in content from what make_fixtures.py produces (not byte-for-byte: SQLite stamps its version into the file)
 	rm -rf .build/fixtures && python3 tools/make_fixtures.py .build/fixtures > /dev/null
-	@for f in fixtures/*.sqlite; do cmp -s "$$f" ".build/fixtures/$$(basename $$f)" || { echo "::error::$$f is out of date. Run 'make fixtures' and commit it."; exit 1; }; done
-	@echo "fixtures are up to date"
+	python3 tools/check_fixtures.py fixtures .build/fixtures
 
 test:            ## Python contract tests (fixtures reproducible, inspector verdicts, sample day shape)
 	python3 -m unittest discover -s tools/tests -v

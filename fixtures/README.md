@@ -14,5 +14,5 @@ verbatim migration SQL (`tools/triplibre_schema.sql`), then written with `VACUUM
 | `not-triplibre.sqlite` | valid SQLite, wrong tables |
 | `not-sqlite.sqlite` | malformed file |
 
-Regenerate with `python3 tools/make_fixtures.py` (deterministic). Check any file, including a real export, with
+Regenerate with `python3 tools/make_fixtures.py` (deterministic content; the SQLite version stamped in the file header may differ between machines, so CI compares content, not bytes). Check any file, including a real export, with
 `python3 tools/inspect_export.py <file>`. Field definitions: `docs/sqlite-data-contract.md`.

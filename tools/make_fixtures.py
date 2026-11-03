@@ -24,14 +24,17 @@ DAY (travel-sample, local date 2026-09-15, America/New_York):
   stay  Penn                 08:27-12:10
   trip  2  Penn -> Lunch      12:10-12:22  walk, polyline + raw points
   stay  Lunch (restaurant)   12:22-13:05
-  trip  3  Lunch -> Penn      13:05-13:18  walk, polyline, NO raw points, has_gap = 1 (gap in the middle)
+  trip  3  Lunch -> Penn      13:05-13:18  walk, polyline, NO raw points ("recorded shape": timing interpolated)
   stay  Penn                 13:18-18:00
   trip  4  Penn -> Grocery    18:00-18:35  multimodal: walk / subway / walk segments, polyline + raw points
   stay  Grocery              18:35-19:00
   trip  5  Grocery -> Home    19:00-19:20  car, NO polyline and NO raw points (endpoints only)
   stay  Home                 19:20-23:40
-  trip  6  Home -> Friend     23:40-00:05 (+1 day)  taxi; departs on the 15th, arrives on the 16th
-  stay  Friend               00:05-  (departure NULL: still there at export time)
+  trip  6  Home -> Friend     23:40-00:15 (+1 day)  taxi, has_gap = 1: GPS silent for ~17 min in the middle, so the
+                                                  polyline has one ~2.3 km straight connector (>= 1 km and >= 8x the
+                                                  median leg, the display heuristic in the contract) and the raw points
+                                                  have a matching hole; departs on the 15th, arrives on the 16th
+  stay  Friend               00:15-  (departure NULL: still there at export time)
   plus: one soft-deleted trip (deleted = 1) inside the day that must never be shown,
         a merged place tombstone, one stamp, one expense, and audit_log rows.
 """
@@ -57,7 +60,7 @@ PLACES = {
     "penn": ("Penn", "work_school", 39.9522, -75.1932),        # University of Pennsylvania
     "lunch": ("Lunch spot", "restaurant", 39.9540, -75.2010),
     "grocery": ("Grocery", "grocery", 39.9480, -75.1700),
-    "friend": (None, "friend_family", 39.9700, -75.1600),      # unnamed place
+    "friend": (None, "friend_family", 39.9900, -75.1400),      # unnamed place, ~4.7 km from "home"
     "old_cafe": ("Old cafe (merged)", "cafe", 39.9523, -75.1930),
 }
 
@@ -108,8 +111,29 @@ def path(a, b, n: int, wobble: float = 0.0004):
     return pts
 
 
+def gap_path(a, b, n_each: int, gap_from: float = 0.25, gap_to: float = 0.75):
+    """A route with a recording gap: dense vertices from a to the point at `gap_from`, nothing until `gap_to`, dense
+    vertices from there to b. The single long leg across the hole is the straight connector TripLibre stores."""
+    full = path(a, b, 1000)
+    p1, p2 = full[round(gap_from * 1000)], full[round(gap_to * 1000)]
+    return path(a, p1, n_each) + path(p2, b, n_each)
+
+
 def path_length(pts) -> float:
     return sum(haversine(pts[i], pts[i + 1]) for i in range(len(pts) - 1))
+
+
+def time_fractions(pts):
+    """Fraction of the trip's duration at each vertex, proportional to distance along the path (so a long leg is a
+    long silence), as a GPS logger moving at constant speed would record."""
+    total = path_length(pts)
+    if total == 0:
+        return [i / max(len(pts) - 1, 1) for i in range(len(pts))]
+    out, acc = [0.0], 0.0
+    for i in range(len(pts) - 1):
+        acc += haversine(pts[i], pts[i + 1])
+        out.append(acc / total)
+    return out
 
 
 class Builder:
@@ -198,11 +222,8 @@ class Builder:
                 uid(), tid, seq, dep + (arr - dep) * f0, dep + (arr - dep) * f1, s_auto, mode_conf if s_auto else None,
                 s_user, path_length(seg_route), encode_polyline(seg_route) if poly else None)
         if raw_points and route:
-            n = len(route) - 1
-            for i, (lat, lon) in enumerate(route):
-                if has_gap and 0.3 < i / n < 0.7:
-                    continue  # the recording gap
-                t = dep + (arr - dep) * i / n
+            for (lat, lon), f in zip(route, time_fractions(route), strict=True):
+                t = dep + (arr - dep) * f
                 speed = distance / (arr - dep) if distance else None
                 self.run(
                     """INSERT INTO raw_location_points (ts, lat, lon, h_accuracy, altitude, v_accuracy, speed, speed_accuracy,
@@ -253,7 +274,7 @@ def build_day(b: Builder, *, gps: bool, day: str = "2026-09-15", full: bool = Tr
     v_penn2 = b.visit("penn", ts(day, "13:18"), ts(day, "18:00"))
     v_groc = b.visit("grocery", ts(day, "18:35"), ts(day, "19:00"))
     v_home2 = b.visit("home", ts(day, "19:20"), ts(day, "23:40"))
-    v_friend = b.visit("friend", ts(day, "00:05", plus_days=1), None, purpose="social")  # ongoing at export
+    v_friend = b.visit("friend", ts(day, "00:15", plus_days=1), None, purpose="social")  # ongoing at export
 
     if gps:
         for key, start in (("home", ts(day, "00:00") - 3600 * 5), ("penn", ts(day, "08:27")), ("lunch", ts(day, "12:22")),
@@ -272,10 +293,10 @@ def build_day(b: Builder, *, gps: bool, day: str = "2026-09-15", full: bool = Tr
     r2 = path(coords("penn"), coords("lunch"), 12)
     b.trip(v_penn1, v_lunch, ts(day, "12:10"), ts(day, "12:22"), r2 if gps else None, mode_auto="walk", mode_conf=0.9,
            raw_points=gps, polyline=gps)
-    # 3 walk back with a GPS gap in the middle, polyline only
+    # 3 walk back, polyline only (no raw points): the "recorded shape" level
     r3 = path(coords("lunch"), coords("penn"), 12, wobble=-0.0004)
     b.trip(v_lunch, v_penn2, ts(day, "13:05"), ts(day, "13:18"), r3 if gps else None, mode_auto="walk", mode_conf=0.6,
-           has_gap=1 if gps else 0, raw_points=False, polyline=gps)
+           raw_points=False, polyline=gps)
     # 4 multimodal walk / subway / walk
     r4 = path(coords("penn"), coords("grocery"), 30, wobble=-0.002)
     b.trip(v_penn2, v_groc, ts(day, "18:00"), ts(day, "18:35"), r4 if gps else None, mode_auto="subway", mode_conf=0.7,
@@ -284,10 +305,12 @@ def build_day(b: Builder, *, gps: bool, day: str = "2026-09-15", full: bool = Tr
     # 5 car, endpoints only (no polyline, no raw points), still has a distance
     t5 = b.trip(v_groc, v_home2, ts(day, "19:00"), ts(day, "19:20"), None, mode_auto="car", mode_conf=0.55)
     b.run("UPDATE trips SET distance_m = ? WHERE id = ?", haversine(coords("grocery"), coords("home")), t5)
-    # 6 taxi, crosses midnight: belongs to `day` because it departs on `day`
-    r6 = path(coords("home"), coords("friend"), 20)
-    b.trip(v_home2, v_friend, ts(day, "23:40"), ts(day, "00:05", plus_days=1), r6 if gps else None, mode_auto="car",
-           mode_conf=0.6, mode_user="taxi", user_status="edited", raw_points=gps, polyline=gps)
+    # 6 taxi, crosses midnight (belongs to `day` because it departs on `day`) and has a recording gap: the route has
+    #   a ~2.3 km hole in the middle, so the polyline keeps one long straight connector and, with distance-proportional
+    #   timestamps, the raw points are silent for about half of the 35 minutes (> the 15-minute has_gap threshold).
+    r6 = gap_path(coords("home"), coords("friend"), 10)
+    b.trip(v_home2, v_friend, ts(day, "23:40"), ts(day, "00:15", plus_days=1), r6 if gps else None, mode_auto="car",
+           mode_conf=0.6, mode_user="taxi", user_status="edited", has_gap=1 if gps else 0, raw_points=gps, polyline=gps)
 
     if full:
         # a soft-deleted auto trip the engine once produced inside the Penn stay: must never be displayed

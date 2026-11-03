@@ -91,6 +91,30 @@ class InspectorVerdicts(unittest.TestCase):
         self.assertIn("not a SQLite database", inspect("not-sqlite.sqlite")[1])
         self.assertIn("required tables/columns missing", inspect("not-triplibre.sqlite")[1])
 
+    def test_truncated_header_is_reported_not_crashed(self):
+        with tempfile.TemporaryDirectory() as d:
+            for name, body in (("sig-only.sqlite", b"SQLite format 3\x00"), ("short.sqlite", b"SQLite format 3\x00" + b"\x00" * 40)):
+                f = Path(d) / name
+                f.write_bytes(body)
+                out = io.StringIO()
+                with redirect_stdout(out):
+                    code = inspect_export.main([str(f)])
+                self.assertEqual(code, 2, out.getvalue())
+                self.assertIn("truncated", out.getvalue())
+
+    def test_filenames_with_uri_characters_open_correctly(self):
+        with tempfile.TemporaryDirectory() as d:
+            for name in ("travel#copy.sqlite", "travel?v=2.sqlite", "travel 100%.sqlite"):
+                f = Path(d) / name
+                f.write_bytes((FIXTURES / "travel-sample.sqlite").read_bytes())
+                out = io.StringIO()
+                with redirect_stdout(out):
+                    code = inspect_export.main([str(f), "--days"])
+                self.assertEqual(code, 0, out.getvalue())
+                self.assertIn("2026-09-15", out.getvalue())
+            self.assertEqual(sorted(p.name for p in Path(d).iterdir()), sorted(["travel#copy.sqlite", "travel?v=2.sqlite", "travel 100%.sqlite"]),
+                             "opening must not create stray files")
+
     def test_newer_schema_imports_with_a_notice(self):
         code, out = inspect("travel-future-schema.sqlite")
         self.assertEqual(code, 0)
@@ -112,7 +136,7 @@ class SampleDayMatchesTheContract(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.con = sqlite3.connect(f"file:{FIXTURES / 'travel-sample.sqlite'}?mode=ro&immutable=1", uri=True)
+        cls.con = sqlite3.connect(inspect_export.read_only_uri(FIXTURES / "travel-sample.sqlite"), uri=True)
 
     @classmethod
     def tearDownClass(cls):
@@ -154,7 +178,27 @@ class SampleDayMatchesTheContract(unittest.TestCase):
                                 (SELECT COUNT(*) FROM raw_location_points p WHERE p.ts > t.departure_ts AND p.ts < t.arrival_ts)
                          FROM trips t WHERE deleted = 0 ORDER BY departure_ts""")
         levels = {("measured" if n >= 2 else "shape" if poly else "schematic") + ("+gap" if gap else "") for poly, gap, n in rows}
-        self.assertEqual(levels, {"measured", "shape+gap", "schematic"})
+        self.assertEqual(levels, {"measured", "shape", "schematic", "measured+gap"})
+
+    def test_gap_trip_satisfies_the_contracts_gap_heuristic(self):
+        """Contract §6: a has_gap trip's polyline holds a straight connector >= 1 km and >= 8x the median leg, and its
+        raw points are silent for more than 15 minutes (the threshold TripLibre uses to set has_gap)."""
+        dep, arr, poly = self.q("SELECT departure_ts, arrival_ts, route_polyline FROM trips WHERE deleted = 0 AND has_gap = 1")[0]
+        pts = decode_polyline(poly)
+        legs = sorted(make_fixtures.haversine(pts[i], pts[i + 1]) for i in range(len(pts) - 1))
+        longest, median = legs[-1], legs[len(legs) // 2]
+        self.assertGreaterEqual(longest, 1000)
+        self.assertGreaterEqual(longest, 8 * median)
+        times = [r[0] for r in self.q("SELECT ts FROM raw_location_points WHERE ts >= ? AND ts <= ? ORDER BY ts", dep, arr)]
+        self.assertGreaterEqual(len(times), 2)
+        self.assertGreater(max(b - a for a, b in zip(times, times[1:], strict=False)), 15 * 60)
+
+    def test_other_trips_have_no_long_silence(self):
+        rows = self.q("SELECT departure_ts, arrival_ts FROM trips WHERE deleted = 0 AND has_gap = 0 AND route_polyline IS NOT NULL")
+        for dep, arr in rows:
+            times = [r[0] for r in self.q("SELECT ts FROM raw_location_points WHERE ts >= ? AND ts <= ? ORDER BY ts", dep, arr)]
+            if len(times) >= 2:
+                self.assertLess(max(b - a for a, b in zip(times, times[1:], strict=False)), 15 * 60)
 
     def test_ongoing_stay_and_merged_place(self):
         self.assertEqual(self.q("SELECT COUNT(*) FROM visits WHERE deleted = 0 AND departure_ts IS NULL")[0][0], 1)

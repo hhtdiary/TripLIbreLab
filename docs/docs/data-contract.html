@@ -145,7 +145,7 @@ ORDER BY ts;</code></pre>
 <h3>DiaryDay ← derived</h3>
 <ul>
   <li><b>Date:</b> the local calendar date of <code>trips.departure_ts</code> in that trip's own <code>tz</code>. This is
-    TripLibre's <code>person_day_id</code>. A taxi ride from 23:40 to 00:05 belongs to the day it left.</li>
+    TripLibre's <code>person_day_id</code>. A taxi ride from 23:40 to 00:15 belongs to the day it left.</li>
   <li><b>Trips:</b> all non-deleted trips with that date, ordered by departure, numbered from 1.</li>
   <li><b>Stays:</b> the overlap query above, plus the first trip's origin stay and the last trip's destination stay.</li>
   <li><b>Listed days:</b> V0.1 lists dates with at least one trip (TripLibre's own person-day definition also counts

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Inspect a TripLibre `travel.sqlite` and check it against TripLibreLab's data contract
-(docs/sqlite-data-contract.md). Read-only: the file is opened with mode=ro and never modified.
+(docs/sqlite-data-contract.md). Read-only: the file is opened with mode=ro&immutable=1 and never modified.
 
 Usage:  python3 tools/inspect_export.py path/to/travel.sqlite [--days] [--day YYYY-MM-DD]
 
@@ -46,6 +46,12 @@ def fail(msg: str) -> int:
     return 2
 
 
+def read_only_uri(path: Path) -> str:
+    """SQLite URI for opening `path` read-only. The path is percent-escaped (Path.as_uri), so names containing
+    '#', '?' or '%' are not mistaken for a fragment or query string."""
+    return path.resolve().as_uri() + "?mode=ro&immutable=1"
+
+
 def day_key(ts: float, tz: str | None) -> str:
     try:
         zone = ZoneInfo(tz) if tz else timezone.utc
@@ -80,11 +86,13 @@ def main(argv: list[str]) -> int:
         return fail(f"cannot read file: {e}")
     if not header.startswith(b"SQLite format 3\x00"):
         return fail("not a SQLite database (bad header)")
+    if len(header) < 100:
+        return fail("damaged file: SQLite header is truncated")
     journal = {1: "rollback", 2: "WAL"}.get(header[18], f"unknown({header[18]})")
     print(f"file:            {path.name}  ({path.stat().st_size} bytes, header journal mode = {journal})")
 
-    con = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
     try:
+        con = sqlite3.connect(read_only_uri(path), uri=True)
         ok = con.execute("PRAGMA quick_check").fetchone()[0]
     except sqlite3.DatabaseError as e:
         return fail(f"SQLite could not open it: {e}")

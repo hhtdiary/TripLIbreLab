@@ -21,7 +21,9 @@ SQLITE_HEADER = b"SQLite format 3\x00"
 
 def db_content(path: Path) -> dict:
     header = path.read_bytes()[:100]
-    con = sqlite3.connect(f"file:{path}?mode=ro&immutable=1", uri=True)
+    if len(header) < 100:
+        raise ValueError(f"{path}: truncated SQLite header")
+    con = sqlite3.connect(path.resolve().as_uri() + "?mode=ro&immutable=1", uri=True)
     try:
         schema = con.execute(
             "SELECT type, name, tbl_name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name"

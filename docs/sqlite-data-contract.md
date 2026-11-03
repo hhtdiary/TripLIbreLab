@@ -226,8 +226,8 @@ first-step.md asks for "days with available travel records" and a trip count, so
 ≥ 1 non-deleted trip (§12 Q2). A date with no rows is not evidence of no travel (collection may have been off);
 the Day Picker should say "no recorded trips" rather than "no travel".
 
-Midnight example from the fixture: a taxi trip 23:40 → 00:05 belongs to the 15th (its departure date); the
-following stay, which starts at 00:05 on the 16th with `departure_ts NULL`, is attached to the 15th as its final
+Midnight example from the fixture: a taxi trip 23:40 → 00:15 belongs to the 15th (its departure date); the
+following stay, which starts at 00:15 on the 16th with `departure_ts NULL`, is attached to the 15th as its final
 destination stay and also appears on the 16th if that day has trips.
 
 ## 6. Geometry fidelity: what replay may show as "measured"

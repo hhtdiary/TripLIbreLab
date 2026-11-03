@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..800,0..100&family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/docs.css?v=3">
 <script>try { const t = localStorage.getItem('hht-docs-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
-<script src="../assets/docs.js?v=1" defer></script>
+<script src="../assets/docs.js?v=2" defer></script>
 </head>
 <body>
 <main class="dx-main"><article class="dx-content">
@@ -36,7 +36,14 @@ behaviour has not been verified in the finished app it is marked <span class="st
 <p>Only the file you pick in the Files app. iOS does not let an app see other files, and TripLibreLab asks for no location
 permission: it reads your history from the export, not from the phone's GPS.</p>
 <p>That file is TripLibre's <code>travel.sqlite</code> snapshot, which holds your <b>entire</b> TripLibre history, raw GPS
-points included, whatever range you chose when exporting. TripLibreLab reads the parts it needs to replay days.</p>
+points included, whatever range you chose when exporting. TripLibreLab reads the parts it needs to replay days and
+leaves the rest on disk:</p>
+<div class="table-wrap"><table>
+  <tr><th>Read</th><th>Never read</th></tr>
+  <tr><td>Trips and stays: their times, time zones, travel modes, purposes and coordinates.<br>Places: name, category and coordinates.<br>Route shapes, and GPS fixes only inside a trip you replay.</td>
+      <td>Notes on places, trips, stays, stamps and costs.<br>Street addresses.<br>TripLibre's correction log (<code>audit_log</code>), which records old and new values.<br>Flight booking references and seats.<br>GPS fixes outside the trips you replay.</td></tr>
+</table></div>
+<p>The full list, column by column, is in the <a href="data-contract.html#fields-that-are-never-read">data contract</a>.</p>
 
 <h2>What TripLibreLab keeps <span class="status planned">Pending</span></h2>
 <div class="table-wrap"><table>

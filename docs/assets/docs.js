@@ -20,6 +20,10 @@ const NAV = [
     { href: D + 'privacy.html', title: 'Data & privacy' },
     { href: D + 'faq.html', title: 'FAQ & troubleshooting' },
   ] },
+  { group: 'For developers', items: [
+    { href: D + 'developer.html', title: 'Developer guide' },
+    { href: D + 'data-contract.html', title: 'SQLite data contract' },
+  ] },
   { group: 'About', items: [
     { href: D + 'about.html', title: 'About TripLibreLab' },
   ] },

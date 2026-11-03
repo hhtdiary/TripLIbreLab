@@ -221,3 +221,8 @@ __marimo__/
 
 # Ds
 .DS_Store
+# Node tooling for the docs linters (package.json)
+node_modules/
+.vercel/
+# Local build / check output
+.build/

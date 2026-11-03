@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Developer guide · TripLibreLab Docs</title>
+<meta name="description" content="How TripLibreLab is built: repository layout, the design-first workflow, how the data contract was verified against TripLibre, the fixtures and tools, how to edit this documentation, and how to contribute.">
+<link rel="icon" href="../assets/triplibrelab-logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..800,0..100&family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/docs.css?v=3">
+<script>try { const t = localStorage.getItem('hht-docs-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script src="../assets/docs.js?v=2" defer></script>
+</head>
+<body>
+<main class="dx-main"><article class="dx-content">
+<p class="eyebrow">For developers</p>
+<h1>Developer guide</h1>
+<p class="lede">How TripLibreLab is being built, in the order it is being built: design documents first, then a verified
+data contract and test fixtures, then the iOS app. This page is for anyone who wants to read, check or continue the work.</p>
+
+<div class="callout note"><div class="ic">i</div>
+<p>Where the project stands: the design documents and the <a href="data-contract.html">SQLite data contract</a> are
+done, synthetic test databases and a contract checker exist, and <b>no Swift or Xcode code has been written yet</b>.
+Everything below is checkable from the repository today.</p></div>
+
+<h2>Repository layout</h2>
+<div class="table-wrap"><table>
+  <tr><th>Path</th><th>What it holds</th></tr>
+  <tr><td><code>design/</code></td><td>The product framework, the V0.1 scope (<code>first-step.md</code>) and the website plan. These are the requirements; nothing is built that they do not call for.</td></tr>
+  <tr><td><code>docs/</code></td><td>This website, served by GitHub Pages from the <code>main</code> branch. Also holds <code>sqlite-data-contract.md</code>, the full data contract in Markdown.</td></tr>
+  <tr><td><code>tools/</code></td><td>Python scripts: <code>make_fixtures.py</code> builds test databases, <code>inspect_export.py</code> checks any TripLibre export against the contract, <code>check_fixtures.py</code> compares two fixture sets by content, <code>triplibre_schema.sql</code> is TripLibre's schema copied verbatim, <code>tests/</code> holds the contract tests.</td></tr>
+  <tr><td><code>fixtures/</code></td><td>Synthetic <code>travel.sqlite</code> files for importer tests. No real person's data.</td></tr>
+  <tr><td><code>log/</code></td><td>Transcripts of the AI-assisted sessions in which the site was designed, kept for provenance.</td></tr>
+  <tr><td><code>Makefile</code>, <code>.github/workflows/</code>, lint configs</td><td>The checks that run on every pull request; see <a href="#checks-that-run-on-every-pull-request">below</a>.</td></tr>
+  <tr><td><em>(coming)</em></td><td>The iOS app: a SwiftUI project with a separate read-only import package. Its layout will be documented here when it exists.</td></tr>
+</table></div>
+
+<h2>How we build: the order of work</h2>
+<p><code>design/first-step.md</code> fixes the order, and the reason for it is simple: the app replays whatever is in
+TripLibre's database, so nothing can be built with confidence until that database is understood.</p>
+<ol class="steps">
+  <li><b>Write down the scope</b>The framework and first-step documents say what V0.1 does, what it refuses to do, and
+    how it is accepted. They name four normalized models the app will work with: <code>DiaryDay</code>, <code>Trip</code>,
+    <code>Stay</code> and <code>TrackPoint</code>.</li>
+  <li><b>Establish the data contract</b> <span class="status available">Done</span>Read TripLibre's real schema and
+    exporter, write down every table, column and convention the app depends on, and map them to the four models.
+    Never invent a column name. The result is the <a href="data-contract.html">data contract</a>.</li>
+  <li><b>Build fixtures and a checker</b> <span class="status available">Done</span>Generate small synthetic databases
+    from TripLibre's own migration SQL, one per test case in the first-step QA list, and a script that checks any export
+    against the contract without reading personal content.</li>
+  <li><b>Build the importer</b> <span class="status planned">Next</span>A read-only Swift package that opens
+    <code>travel.sqlite</code>, runs the validation checks in the contract, and produces the normalized models. Its
+    unit tests run against the fixtures.</li>
+  <li><b>Build the screens</b> <span class="status planned">Planned</span>Welcome and import, day picker, replay, share
+    preview, in SwiftUI with MapKit.</li>
+  <li><b>QA and release</b> <span class="status planned">Planned</span>The acceptance tests in <code>first-step.md</code>,
+    then App Store metadata and submission.</li>
+</ol>
+
+<h2>How the data contract was verified</h2>
+<p>TripLibreLab had no real export to inspect, and a real export is one person's complete location history, so the
+contract was derived from <b>TripLibre's source code</b> instead, which is public and Apache 2.0:</p>
+<div class="table-wrap"><table>
+  <tr><th>Question</th><th>Where the answer came from (TripLibre repository, version 2.1.0)</th></tr>
+  <tr><td>Tables, columns, indexes, views, schema version</td><td><code>Packages/HHTCore/Sources/HHTCore/Database/Schema.swift</code>: six append-only migrations tracked in <code>PRAGMA user_version</code>.</td></tr>
+  <tr><td>How <code>travel.sqlite</code> is written</td><td><code>TravelStore.backup(to:)</code> runs <code>VACUUM INTO</code>; <code>Exporter.exportBundle</code> calls it with no range filter.</td></tr>
+  <tr><td>What a "day" is, how trip ends and purposes are resolved</td><td><code>Analytics.dayKey</code>, <code>Exporter.tripRows</code>, the <code>v_trips</code> view.</td></tr>
+  <tr><td>Window queries for a day</td><td><code>TravelStore.trips(overlapping:)</code> and <code>visits(overlapping:)</code>.</td></tr>
+  <tr><td>Polyline format</td><td><code>Geo.swift</code>, <code>Polyline.encode/decode</code>: Google encoded polyline, precision 1e-5, (lat, lon).</td></tr>
+  <tr><td>Code lists (modes, purposes, categories)</td><td><code>Models/Enums.swift</code>.</td></tr>
+  <tr><td>Prose conventions</td><td><code>docs/data-model.md</code> and the public <a href="https://triplibre.hhtdiary.org/docs/data-dictionary.html">Data dictionary</a>.</td></tr>
+</table></div>
+<p>Two behaviours were then <b>tested rather than assumed</b>, by building a database from the verbatim migrations in
+Python's <code>sqlite3</code>:</p>
+<ul>
+  <li><code>VACUUM INTO</code> of a WAL-mode database produces a file in <b>rollback-journal mode</b> (header bytes 18 and 19
+    equal 1). So an export opens read-only with no <code>-wal</code> or <code>-shm</code> files, including from a read-only
+    folder and with <code>immutable=1</code>.</li>
+  <li>The <code>v_trips</code> and <code>v_visits</code> views exist in the output and resolve <code>mode_final</code>,
+    <code>purpose_final</code> and the place fallbacks exactly as the contract describes.</li>
+</ul>
+<div class="callout warn"><div class="ic">!</div>
+<p><b>Still to do:</b> run the checker on one real export from a phone. Its default output is structure and counts only,
+no coordinates or names, so it can be pasted into an issue. Until then the contract is verified against source, not
+against a device.</p></div>
+
+<h2>Tools</h2>
+<p>Both scripts need only Python 3.10 or newer; there is nothing to install. <code>make help</code> lists every shortcut.</p>
+
+<h3>Build the fixtures</h3>
+<pre data-lang="bash"><code>python3 tools/make_fixtures.py          # writes fixtures/*.sqlite, deterministic</code></pre>
+<p>The script applies <code>tools/triplibre_schema.sql</code> migration by migration, sets <code>user_version</code>
+after each one, inserts a synthetic Philadelphia day, and finishes with <code>VACUUM INTO</code>, the same call
+TripLibre's exporter makes. Running it twice on one machine gives byte-identical files; across machines only the SQLite version stamped in the file header changes, which is why CI compares fixtures by content (<code>tools/check_fixtures.py</code>) rather than by bytes.</p>
+<div class="table-wrap"><table>
+  <tr><th>Fixture</th><th>Case from the first-step QA list</th></tr>
+  <tr><td><code>travel-sample.sqlite</code></td><td>Valid sample. Schema v6; one day with six trips covering every geometry level, a trip crossing midnight, a stay that is still ongoing, a multimodal trip with segments, a soft-deleted trip, a merged place, a stamp and an expense.</td></tr>
+  <tr><td><code>travel-no-gps.sqlite</code></td><td>Missing GPS. The same day with no raw points and no polylines.</td></tr>
+  <tr><td><code>travel-empty.sqlite</code></td><td>Empty diary. Schema only.</td></tr>
+  <tr><td><code>travel-v1.sqlite</code></td><td>Oldest schema. No <code>places.deleted</code>, no <code>stamps</code> or <code>expenses</code> tables.</td></tr>
+  <tr><td><code>travel-future-schema.sqlite</code></td><td>Unsupported schema. v6 tables with <code>user_version = 99</code>.</td></tr>
+  <tr><td><code>not-triplibre.sqlite</code></td><td>Valid SQLite with unrelated tables.</td></tr>
+  <tr><td><code>not-sqlite.sqlite</code></td><td>Malformed file: random bytes.</td></tr>
+</table></div>
+
+<h3>Check an export</h3>
+<pre data-lang="bash"><code>python3 tools/inspect_export.py path/to/travel.sqlite          # structure and counts: safe to share
+python3 tools/inspect_export.py path/to/travel.sqlite --days   # also lists diary dates with trip counts
+python3 tools/inspect_export.py path/to/travel.sqlite --day 2026-09-15   # one day's timeline: private</code></pre>
+<p>The checker opens the file with <code>mode=ro</code>, runs the validation steps in the order the app will
+(header, <code>quick_check</code>, required tables and columns, version), and exits with status 2 when the file is
+unsupported. It is the executable form of the contract: when the Swift importer exists, its tests and this script must
+agree on every fixture.</p>
+<p>Example output for the sample fixture:</p>
+<pre data-lang="text"><code>user_version:    6
+tables:          16  views: ['v_trips', 'v_visits']
+required:        trips, visits, places with all contract columns  OK
+optional:        trip_segments          present
+optional:        raw_location_points    present
+counts:
+  trips                  6 active,     1 soft-deleted
+  visits                 7 active,     0 soft-deleted,   1 ongoing
+  trips w/ polyline      5   with has_gap     1
+diary days:      1  (2026-09-15 … 2026-09-15)</code></pre>
+
+<h2>Checks that run on every pull request</h2>
+<p>The repository carries the same continuous-integration setup as TripLibre, minus the Swift jobs (SwiftLint,
+SwiftFormat, the Xcode build and the Swift test suite) and the SwiftUI accessibility workflow, because there is no Swift
+code here yet. They return with the app. Everything runs on GitHub Actions and locally with <code>make ci</code>.</p>
+<div class="table-wrap"><table>
+  <tr><th>Job</th><th>What it checks</th><th>Locally</th></tr>
+  <tr><td><b>Lint</b></td><td>ESLint on the site scripts, Stylelint on the stylesheets, html-validate with its accessibility rules on every page, markdownlint on the Markdown, Ruff on the Python tools.</td><td><code>make lint</code></td></tr>
+  <tr><td><b>Docs accessibility</b></td><td>axe-core against every page in light and dark theme, WCAG 2.1 AA, with third-party requests blocked so the result does not depend on the network.</td><td><code>make a11y</code></td></tr>
+  <tr><td><b>Data contract</b></td><td>The committed fixtures have the same content (schema, rows, <code>user_version</code>, journal header) as what <code>make_fixtures.py</code> produces, compared with <code>tools/check_fixtures.py</code>; the contract tests pass (inspector verdicts for every fixture, the sample day's shape, polyline round trip); the inspector's verdict is printed for each fixture.</td><td><code>make fixtures-check</code>, <code>make test</code>, <code>make contract-check</code></td></tr>
+  <tr><td><b>CodeQL</b></td><td>Security analysis of the workflows, the Python tools and the site scripts, on every push to <code>main</code>, every pull request, and weekly.</td><td>—</td></tr>
+  <tr><td><b>PR preview</b></td><td>A Vercel preview of the site for pull requests that touch <code>docs/</code>, with the URL posted as a comment. Needs the <code>VERCEL_*</code> repository secrets; until they exist the job reports "not configured" and passes.</td><td>—</td></tr>
+</table></div>
+<p>Configuration lives at the repository root, named as TripLibre names it: <code>package.json</code>, <code>eslint.config.js</code>,
+<code>.stylelintrc.json</code>, <code>.htmlvalidate.json</code>, <code>.markdownlint-cli2.jsonc</code>, <code>ruff.toml</code>,
+<code>scripts/a11y.js</code>, <code>vercel.json</code>, and the workflows in <code>.github/workflows/</code>. The Python tests
+are in <code>tools/tests/</code> and use only the standard library's <code>unittest</code>.</p>
+<p>Two stylesheet blocks are marked with a <code>stylelint-disable no-duplicate-selectors</code> comment: the
+"notebook" theme layers restyle selectors defined earlier in the same file on purpose, so the base styles stay in step
+with TripLibre's. New rules outside those blocks are still checked.</p>
+
+<h2>When TripLibre changes its schema</h2>
+<p>TripLibre's migrations only ever add tables and columns, and its codes are never renamed, so an older importer keeps
+working on a newer export. To keep this repository in step:</p>
+<ol>
+  <li>Copy the new migration string from TripLibre's <code>Schema.swift</code> to the end of
+    <code>tools/triplibre_schema.sql</code> under a <code>-- ==== migration vN ====</code> header.</li>
+  <li>Add a row to the version-history table in <code>docs/sqlite-data-contract.md</code> and to the
+    <a href="data-contract.html#schema-versions">data contract page</a>; raise the tested-version range in
+    <code>tools/inspect_export.py</code>.</li>
+  <li>Rebuild the fixtures and check the diff.</li>
+  <li>If the migration touches <code>trips</code>, <code>visits</code>, <code>places</code>, <code>trip_segments</code> or
+    <code>raw_location_points</code>, update the field map and the importer.</li>
+</ol>
+
+<h2>Editing this website</h2>
+<p>The site is static HTML in <code>docs/</code>, with no build step. Every page is only its <code>&lt;main&gt;</code>
+content; <code>assets/docs.js</code> adds the header, sidebar, "On this page" outline and previous/next links at load
+time from one <code>NAV</code> array. To add a page:</p>
+<ol>
+  <li>Copy an existing page in <code>docs/docs/</code> and replace the content inside <code>&lt;article class="dx-content"&gt;</code>.</li>
+  <li>Add one entry to <code>NAV</code> in <code>assets/docs.js</code>, and bump the <code>?v=</code> query on the
+    <code>docs.js</code> script tag in every page so browsers fetch the new navigation.</li>
+  <li>Use the shared pieces: <code>.callout.note / .warn</code>, <code>.steps</code>, <code>.table-wrap</code>,
+    <code>.cards</code>, and <code>&lt;pre data-lang="bash|sql|python|swift|text"&gt;</code> for highlighted, copyable code.</li>
+  <li>Mark anything not yet built with <span class="status planned">Pending</span>, not with a promise. Statements
+    about data that are verified in TripLibre's source but not yet in a real export say so.</li>
+</ol>
+<p>The visual design follows the TripLibre website so the two read as one family; change the shared stylesheet only for
+reasons that apply to both.</p>
+
+<h2>Conventions</h2>
+<ul>
+  <li><b>Design before code.</b> If a change is not in <code>design/</code>, update the design document first, or open an issue.</li>
+  <li><b>No invented data.</b> Column names come from TripLibre's migrations; example values come from the synthetic fixtures. Screenshots appear only when the interface exists.</li>
+  <li><b>Read-only, local-only.</b> Nothing in this repository may write to a user's export, send it anywhere, or need a network connection to work.</li>
+  <li><b>Say what is measured.</b> Any geometry the app draws is labelled measured, recorded shape, schematic or gap (see the <a href="data-contract.html#geometry-fidelity">contract</a>). Code and docs use those four words.</li>
+  <li><b>Sensitive columns stay on disk.</b> The never-loaded list in the contract (notes, addresses, audit values, booking references) is a rule for the importer, not a suggestion.</li>
+  <li><b>Python tooling is standard library only.</b> So anyone with a Mac can run it without a virtual environment.</li>
+</ul>
+
+<h2>Contributing</h2>
+<ol>
+  <li>Work on a branch and open a pull request against <code>main</code>. Small, complete changes; one topic per PR.</li>
+  <li>A change to the contract updates the Markdown, this website and, if relevant, the fixtures and checker in the same PR.</li>
+  <li>Never commit a real <code>travel.sqlite</code>, even a short one. Use the fixtures, or extend <code>make_fixtures.py</code>.</li>
+  <li>Questions and bug reports go to <a href="https://github.com/hhtdiary/TripLIbreLab/issues">GitHub issues</a>. Questions about recording and exporting belong to <a href="https://github.com/hhtdiary/TripLibre">TripLibre</a>.</li>
+</ol>
+
+<h2>Decisions waiting on the maintainers</h2>
+<p>These are recorded at the end of the data contract and will be resolved before the importer is written:</p>
+<ul>
+  <li>Whether an export with a schema version newer than the app knows is imported with a notice (recommended) or refused.</li>
+  <li>Whether the day picker lists only dates with at least one trip (recommended for V0.1) or also dates with only stays.</li>
+  <li>The default redaction settings for the share card.</li>
+  <li>Whether the importer depends on TripLibre's <code>HHTCore</code> package or stays a small read-only package of its own (recommended).</li>
+  <li>Minimum iOS version, bundle identifier, and whether the Xcode project is generated with XcodeGen as TripLibre's is.</li>
+</ul>
+
+</article></main>
+</body>
+</html>

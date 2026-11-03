@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FAQ & troubleshooting · TripLibreLab Docs</title>
+<title>FAQ &amp; troubleshooting · TripLibreLab Docs</title>
 <meta name="description" content="Common questions about TripLibreLab and what to do when an import or replay does not work.">
 <link rel="icon" href="../assets/triplibrelab-logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..800,0..100&family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/docs.css?v=3">
 <script>try { const t = localStorage.getItem('hht-docs-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
-<script src="../assets/docs.js?v=1" defer></script>
+<script src="../assets/docs.js?v=2" defer></script>
 </head>
 <body>
 <main class="dx-main"><article class="dx-content">
@@ -57,6 +57,14 @@ an unsupported version, update TripLibre and TripLibreLab and export again. See
 <h3>A trip is a straight dashed line</h3>
 <p>That trip has no recorded route points, only a start and end, so it is drawn as a schematic line. It shows that a trip
 happened, not the path. See <a href="replay-and-share.html#recorded-points-and-animated-movement">Recorded points and animated movement</a>.</p>
+
+<h3>Part of a route is dashed</h3>
+<p>GPS was silent for more than 15 minutes during that trip, so TripLibre marked it as having a gap and joined the two
+sides with a straight line. TripLibreLab draws that connector dashed so it is not mistaken for a measured path.</p>
+
+<h3>Which TripLibre versions are supported?</h3>
+<p>Exports with database schema versions 1 to 6, which covers every TripLibre release up to 2.1.0. A newer export imports
+with a notice. See <a href="importing-data.html#supported-versions">Supported versions</a>.</p>
 
 <h3>A trip has the wrong mode or place name</h3>
 <p>TripLibreLab shows the diary as exported. Fix it in TripLibre, then export and import again.</p>

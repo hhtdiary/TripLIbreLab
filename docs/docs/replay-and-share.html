@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Replay & share · TripLibreLab Docs</title>
+<title>Replay &amp; share · TripLibreLab Docs</title>
 <meta name="description" content="How TripLibreLab's map and timeline relate to your recorded diary, which lines are measured and which are schematic, and how a replay is shared.">
 <link rel="icon" href="../assets/triplibrelab-logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..800,0..100&family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/docs.css?v=3">
 <script>try { const t = localStorage.getItem('hht-docs-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
-<script src="../assets/docs.js?v=1" defer></script>
+<script src="../assets/docs.js?v=2" defer></script>
 </head>
 <body>
 <main class="dx-main"><article class="dx-content">
@@ -29,14 +29,18 @@ travel modes; corrections belong in TripLibre, followed by a fresh export.</p>
 
 <h2>Recorded points and animated movement</h2>
 <p>Between two recorded GPS points the marker has to move somehow, so the app animates it. That animation is not
-measurement. TripLibreLab draws three kinds of line differently:</p>
+measurement. TripLibre stores two kinds of geometry for a trip: the raw GPS fixes, which have timestamps, and a simplified
+route shape, which does not. So every trip is drawn and labelled at one of four levels:</p>
 <div class="table-wrap"><table>
-  <tr><th>On the map</th><th>Meaning</th></tr>
-  <tr><td><b>Solid route</b></td><td>The trip's recorded points, joined in order. The path is as good as the GPS behind it.</td></tr>
-  <tr><td><b>Dashed, schematic line</b></td><td>Only the trip's start and end are known. The line shows that a trip happened, not where it went.</td></tr>
-  <tr><td><b>Moving marker</b></td><td>The replay's current position. Between recorded points it is interpolated, so treat it as approximate.</td></tr>
+  <tr><th>On the map</th><th>Label</th><th>Meaning</th></tr>
+  <tr><td><b>Solid route, marker on real timestamps</b></td><td>Measured</td><td>The trip has GPS fixes. The marker moves from fix to fix at the times they were recorded. The path is as good as the GPS behind it.</td></tr>
+  <tr><td><b>Solid route, marker at even speed</b></td><td>Recorded route, timing interpolated</td><td>The trip has a stored route shape but no usable fixes. The path is real; where the marker is at a given minute is an even spread between departure and arrival.</td></tr>
+  <tr><td><b>Dashed straight line</b></td><td>Schematic</td><td>Only the trip's start and end are known. The line shows that a trip happened, not where it went.</td></tr>
+  <tr><td><b>Dashed section inside a route</b></td><td>Recording gap</td><td>GPS was silent for more than 15 minutes during the trip. TripLibre joins the two sides with a straight line; TripLibreLab draws that part dashed.</td></tr>
 </table></div>
-<p>The exact styling will be documented with screenshots once the interface exists.</p>
+<p>A trip or stay with no location at all stays on the timeline and is left off the map. The rules behind these levels
+are in the <a href="data-contract.html#geometry-fidelity">data contract</a>; the exact styling will be documented with
+screenshots once the interface exists.</p>
 
 <h2>Playback controls <span class="status planned">Pending</span></h2>
 <div class="table-wrap"><table>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQLite data contract · TripLibreLab Docs</title>
+<meta name="description" content="The TripLibre travel.sqlite tables, columns and conventions TripLibreLab depends on, how a file is validated, how records map to diary days, trips, stays and track points, and which fields are never read.">
+<link rel="icon" href="../assets/triplibrelab-logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..800,0..100&family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/docs.css?v=3">
+<script>try { const t = localStorage.getItem('hht-docs-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
+<script src="../assets/docs.js?v=2" defer></script>
+</head>
+<body>
+<main class="dx-main"><article class="dx-content">
+<p class="eyebrow">For developers</p>
+<h1>SQLite data contract</h1>
+<p class="lede">What TripLibreLab relies on inside a TripLibre <code>travel.sqlite</code>, and nothing more. This is the
+reference the importer is written against. The complete version, with every SQL statement, is
+<a href="https://github.com/hhtdiary/TripLIbreLab/blob/main/docs/sqlite-data-contract.md"><code>docs/sqlite-data-contract.md</code></a>
+in the repository.</p>
+
+<div class="callout note"><div class="ic">i</div>
+<p><b>Source of truth:</b> TripLibre 2.1.0, database schema <b>v6</b>, read from TripLibre's migration and export code.
+Every column below is copied from those migrations. The contract has been checked against databases built from that same
+SQL (the <a href="developer.html#tools">fixtures</a>) and <b>not yet against an export from a phone</b>; that check is
+marked <span class="status planned">Pending</span> where it matters.</p></div>
+
+<h2>The file</h2>
+<div class="table-wrap"><table>
+  <tr><th>Fact</th><th>Value</th></tr>
+  <tr><td><b>Name and place</b></td><td><code>travel.sqlite</code> in <code>hht-export-YYYYMMDD-HHMMSS/</code>, under Files › On My iPhone › TripLibre › Exports.</td></tr>
+  <tr><td><b>How TripLibre writes it</b></td><td><code>VACUUM INTO</code> from the live database. The result is one self-contained file in rollback-journal mode: no <code>-wal</code> or <code>-shm</code> files are needed to open it, even from a read-only location.</td></tr>
+  <tr><td><b>What it contains</b></td><td>Always the <b>complete</b> database: every table, soft-deleted rows included, and all raw GPS points, whatever range or options were chosen for the export.</td></tr>
+  <tr><td><b>Schema version</b></td><td><code>PRAGMA user_version</code>, 1 to 6 today. Migrations only add; codes are never renamed.</td></tr>
+  <tr><td><b>Other export files</b></td><td><code>trips.csv</code>, <code>data.json</code>, GeoJSON and the rest are not read by TripLibreLab.</td></tr>
+</table></div>
+
+<h2>How a file is validated</h2>
+<p>In this order; the first failure stops the import with the message shown.</p>
+<div class="table-wrap"><table>
+  <tr><th>#</th><th>Check</th><th>If it fails</th></tr>
+  <tr><td>1</td><td>The first 16 bytes read <code>SQLite format 3\0</code>.</td><td>"This file is not a SQLite database."</td></tr>
+  <tr><td>2</td><td>Open read-only (<code>mode=ro&amp;immutable=1</code>) and <code>PRAGMA quick_check</code> returns <code>ok</code>.</td><td>"The file could not be opened as a TripLibre database (damaged file)."</td></tr>
+  <tr><td>3</td><td>Tables <code>trips</code>, <code>visits</code> and <code>places</code> exist with every required column listed below.</td><td>"This SQLite file is not a TripLibre export (expected tables are missing)."</td></tr>
+  <tr><td>4</td><td><code>user_version</code> is between 1 and 6.</td><td>Version 0: unsupported. Newer than 6: a notice, then import continues if check 3 passed (recommended policy, awaiting sign-off).</td></tr>
+  <tr><td>5</td><td>At least one row in <code>trips</code> with <code>deleted = 0</code>.</td><td>"This diary contains no recorded trips." An empty-diary screen, not an error.</td></tr>
+</table></div>
+<p>The importer never writes to the file, never runs <code>VACUUM</code> or migrations, and keeps its private copy
+only inside the app's container.</p>
+
+<h2>Conventions</h2>
+<div class="table-wrap"><table>
+  <tr><th>Topic</th><th>Rule</th></tr>
+  <tr><td><code>*_ts</code>, <code>ts</code></td><td>UTC Unix seconds, stored as REAL.</td></tr>
+  <tr><td><code>tz</code></td><td>IANA zone of the phone <b>when that record was made</b>, e.g. <code>America/New_York</code>. Local dates and clock times are computed in each record's own zone, so travel across zones stays right. May be NULL on old or imported rows.</td></tr>
+  <tr><td>Coordinates</td><td>WGS84 decimal degrees in <code>lat</code>, <code>lon</code>.</td></tr>
+  <tr><td>Distances</td><td>Metres, great-circle along the recorded path; straight line across a data gap.</td></tr>
+  <tr><td>IDs</td><td>Lowercase UUID strings for places, visits, trips and segments; integer autoincrement for raw points.</td></tr>
+  <tr><td><code>route_polyline</code></td><td>Google encoded polyline, precision 1e-5, (lat, lon), simplified at 8 m. <b>It carries no timestamps.</b></td></tr>
+  <tr><td>Soft delete</td><td><code>deleted = 1</code> rows are kept. Every query filters <code>deleted = 0</code>.</td></tr>
+  <tr><td>Missing values</td><td>SQL NULL. No sentinels.</td></tr>
+  <tr><td>Final mode</td><td><code>COALESCE(mode_user, mode_auto, 'unknown')</code>.</td></tr>
+</table></div>
+
+<h2>Tables and what TripLibreLab does with them</h2>
+<div class="table-wrap"><table>
+  <tr><th>Table</th><th>Since</th><th>Use in TripLibreLab</th></tr>
+  <tr><td><code>trips</code></td><td>v1</td><td><b>Required.</b> Source of <code>Trip</code>.</td></tr>
+  <tr><td><code>visits</code></td><td>v1</td><td><b>Required.</b> Source of <code>Stay</code>.</td></tr>
+  <tr><td><code>places</code></td><td>v1 (<code>deleted</code> v2, <code>category_custom</code> v5)</td><td><b>Required.</b> Names and categories for stays and trip ends.</td></tr>
+  <tr><td><code>trip_segments</code></td><td>v1</td><td>Optional. Mode labels for multimodal trips.</td></tr>
+  <tr><td><code>raw_location_points</code></td><td>v1</td><td>Optional. Timestamped <code>TrackPoint</code>s for replay, read only inside a trip's time window.</td></tr>
+  <tr><td><code>motion_activities</code>, <code>flights</code>, <code>journeys</code>, <code>journey_members</code>, <code>life_phases</code>, <code>airports</code>, <code>app_meta</code></td><td>v1</td><td>Not used in V0.1.</td></tr>
+  <tr><td><code>stamps</code></td><td>v3</td><td>Not used in V0.1.</td></tr>
+  <tr><td><code>expenses</code></td><td>v6</td><td>Not used.</td></tr>
+  <tr><td><code>audit_log</code></td><td>v1</td><td><b>Never read.</b> Its old and new values can contain place names and free text.</td></tr>
+  <tr><td>Views <code>v_trips</code>, <code>v_visits</code></td><td>v1 (<code>v_trips</code> redefined v4)</td><td>Handy for analysts; the importer queries the base tables so a file whose views were altered still imports, and reproduces <code>v_trips</code>'s purpose logic itself.</td></tr>
+</table></div>
+
+<h2>Field map</h2>
+<p>The app's four models and the columns each one is built from. "Required" columns are those check 3 above insists on.</p>
+
+<h3>Place ← places</h3>
+<p>Required: <code>id, name, lat, lon, category, merged_into</code>. Read when present: <code>deleted</code> (v2+).</p>
+<ul>
+  <li><code>name</code> NULL means an unnamed place. TripLibre shows its coordinates; TripLibreLab shows the category instead and <b>never</b> puts coordinates on a share card by default.</li>
+  <li><code>category = 'home'</code> or <code>'work_school'</code> drives the default redaction.</li>
+  <li><code>merged_into</code> set marks a tombstone; resolve to the target.</li>
+  <li>Never loaded: <code>address, notes, favorite, radius_m, source, city, region, country</code>.</li>
+</ul>
+
+<h3>Trip ← trips (+ trip_segments)</h3>
+<p>Required: <code>id, origin_visit_id, destination_visit_id, origin_place_id, destination_place_id, departure_ts,
+arrival_ts, distance_m, mode_auto, mode_user, purpose, route_polyline, has_gap, user_status, deleted, tz</code>.</p>
+<div class="table-wrap"><table>
+  <tr><th>Model field</th><th>From</th></tr>
+  <tr><td><code>departure</code>, <code>arrival</code></td><td><code>departure_ts</code>, <code>arrival_ts</code> (both NOT NULL; arrival may be on the next local day).</td></tr>
+  <tr><td><code>originPlaceID</code>, <code>destinationPlaceID</code></td><td>The origin / destination visit's <code>place_id</code>, else the trip's own <code>*_place_id</code> (used for manual or imported history). This is <code>v_trips.origin_place_final</code>.</td></tr>
+  <tr><td><code>originCoordinate</code>, <code>destinationCoordinate</code></td><td>Visit centroid → place coordinate → first/last polyline vertex → nil. Nil must not crash anything.</td></tr>
+  <tr><td><code>mode</code>, <code>modeIsUserCorrected</code></td><td><code>COALESCE(mode_user, mode_auto, 'unknown')</code>; <code>mode_user IS NOT NULL</code>.</td></tr>
+  <tr><td><code>segmentModes</code></td><td><code>trip_segments</code> by <code>seq</code>, each with the same COALESCE, consecutive repeats collapsed. Shown only when more than one distinct mode.</td></tr>
+  <tr><td><code>purpose</code></td><td><code>trips.purpose</code> → destination visit <code>purpose</code> → default for the destination place category (table below). This is <code>v_trips.purpose_final</code>.</td></tr>
+  <tr><td><code>routeShape</code></td><td>Decoded <code>route_polyline</code>; shape only, empty when NULL.</td></tr>
+  <tr><td><code>hasRecordingGap</code></td><td><code>has_gap</code>: GPS silent for more than 15 minutes during the trip; the polyline then contains a straight connector across the gap.</td></tr>
+  <tr><td>Never loaded</td><td><code>notes, auto_confidence, mode_confidence, source, created_at, updated_at</code>.</td></tr>
+</table></div>
+<pre data-lang="sql"><code>SELECT t.id, t.departure_ts, t.arrival_ts, t.tz,
+       COALESCE(ov.place_id, t.origin_place_id)      AS origin_place_id,
+       COALESCE(dv.place_id, t.destination_place_id) AS destination_place_id,
+       ov.lat AS origin_lat, ov.lon AS origin_lon, dv.lat AS destination_lat, dv.lon AS destination_lon,
+       COALESCE(t.mode_user, t.mode_auto, 'unknown') AS mode,
+       t.purpose AS purpose_explicit, dv.purpose AS purpose_visit, dp.category AS destination_category,
+       t.distance_m, t.route_polyline, t.has_gap, t.user_status
+FROM trips t
+LEFT JOIN visits ov ON ov.id = t.origin_visit_id
+LEFT JOIN visits dv ON dv.id = t.destination_visit_id
+LEFT JOIN places dp ON dp.id = COALESCE(dv.place_id, t.destination_place_id)
+WHERE t.deleted = 0
+ORDER BY t.departure_ts;</code></pre>
+
+<h3>Stay ← visits</h3>
+<p>Required: <code>id, place_id, arrival_ts, departure_ts, lat, lon, purpose, user_status, deleted, tz</code>.</p>
+<ul>
+  <li><code>departure_ts</code> NULL means <b>still there when the export was made</b>. Show "ongoing"; never invent an end.</li>
+  <li><code>lat, lon</code> is the observed centroid of the stay, slightly different from the place's coordinate.</li>
+  <li>Stays for a day are those <b>overlapping</b> the local day, the same window query TripLibre uses:</li>
+</ul>
+<pre data-lang="sql"><code>SELECT id, place_id, arrival_ts, departure_ts, lat, lon, purpose, user_status, tz
+FROM visits
+WHERE arrival_ts &lt;= :day_end_utc AND (departure_ts IS NULL OR departure_ts &gt;= :day_start_utc) AND deleted = 0
+ORDER BY arrival_ts;</code></pre>
+
+<h3>TrackPoint ← raw_location_points</h3>
+<p>Optional table. Columns used: <code>ts, lat, lon, h_accuracy, speed, course, source</code>. There is no foreign key from
+raw points to trips; the only link is time, and the table can hold hundreds of thousands of rows, so it is queried only
+by trip window and never as a whole.</p>
+<pre data-lang="sql"><code>SELECT ts, lat, lon, h_accuracy, speed, course, source
+FROM raw_location_points
+WHERE ts &gt;= :trip_departure_ts AND ts &lt;= :trip_arrival_ts
+ORDER BY ts;</code></pre>
+
+<h3>DiaryDay ← derived</h3>
+<ul>
+  <li><b>Date:</b> the local calendar date of <code>trips.departure_ts</code> in that trip's own <code>tz</code>. This is
+    TripLibre's <code>person_day_id</code>. A taxi ride from 23:40 to 00:15 belongs to the day it left.</li>
+  <li><b>Trips:</b> all non-deleted trips with that date, ordered by departure, numbered from 1.</li>
+  <li><b>Stays:</b> the overlap query above, plus the first trip's origin stay and the last trip's destination stay.</li>
+  <li><b>Listed days:</b> V0.1 lists dates with at least one trip (TripLibre's own person-day definition also counts
+    stay-only dates; the choice is open). A date with no rows is not evidence of no travel; recording may have been off.</li>
+</ul>
+
+<h2 id="geometry-fidelity">Geometry fidelity</h2>
+<p>Because polylines carry no timestamps, the replay must be honest about what it animates. Every trip is drawn at exactly one of these levels, and labelled with it.</p>
+<div class="table-wrap"><table>
+  <tr><th>Level</th><th>Data present</th><th>How it is replayed</th></tr>
+  <tr><td><b>Measured</b></td><td>Two or more raw points inside the trip window</td><td>Marker moves point to point on the real timestamps; the stored shape is the path.</td></tr>
+  <tr><td><b>Recorded shape</b></td><td>Polyline, but no usable raw points</td><td>The stored shape is drawn; the marker moves along it at uniform speed between departure and arrival. Labelled "timing interpolated".</td></tr>
+  <tr><td><b>Schematic</b></td><td>Only origin and destination coordinates</td><td>A dashed straight line; uniform speed. Labelled "no GPS track".</td></tr>
+  <tr><td><b>Gap</b></td><td><code>has_gap = 1</code></td><td>The long straight connector inside the polyline (a leg of 1 km or more and at least 8 times the trip's median leg, TripLibre's own display heuristic) is drawn dashed and labelled "recording gap".</td></tr>
+  <tr><td><b>No location</b></td><td>No coordinates at either end</td><td>Kept on the timeline, left off the map.</td></tr>
+</table></div>
+
+<h2>Edge cases the importer must survive</h2>
+<p>All of these exist in the <a href="developer.html#build-the-fixtures">fixtures</a>.</p>
+<ul>
+  <li>Trip crossing local midnight; stay still ongoing (<code>departure_ts</code> NULL).</li>
+  <li>Soft-deleted trips, visits and places; a merged place tombstone.</li>
+  <li>A trip with neither polyline nor raw points; a trip with a polyline and <code>has_gap = 1</code>.</li>
+  <li>A trip without visits (imported or hand-made) that falls back to <code>*_place_id</code>, or has no location at all.</li>
+  <li>An unnamed place; a NULL <code>tz</code>; several time zones on one date.</li>
+  <li>A multimodal trip with segments.</li>
+  <li>Schema v1; a schema newer than 6; an empty database; a non-SQLite file; a SQLite file from another app.</li>
+</ul>
+
+<h2>Code lists</h2>
+<p>Copied from TripLibre's <code>Enums.swift</code>. Unknown codes from a newer TripLibre are shown as their raw string, never rejected.</p>
+<div class="table-wrap"><table>
+  <tr><th>List</th><th>Codes</th></tr>
+  <tr><td><b>Modes</b></td><td><code>walk run bicycle ebike scooter car car_driver car_passenger taxi bus subway light_rail commuter_rail intercity_rail coach shuttle ferry airplane other unknown</code></td></tr>
+  <tr><td><b>Purposes</b></td><td><code>home work school meal shopping recreation social personal_business medical travel transfer escort other</code></td></tr>
+  <tr><td><b>Place categories</b></td><td><code>home work_school restaurant cafe grocery shopping recreation entertainment airport rail_station transit_station hotel friend_family medical other</code> and, since v4, <code>stadium event_venue museum library convenience_store gas_station bar gym pharmacy bank civic religious parking</code></td></tr>
+  <tr><td><b>User status</b></td><td><code>auto confirmed edited manual</code></td></tr>
+  <tr><td><b>Default purpose by destination category</b></td><td>home→home · work_school→work · restaurant, cafe→meal · grocery, shopping, convenience_store, gas_station→shopping · recreation, entertainment, stadium, event_venue, museum, library, gym→recreation · airport, rail_station, hotel→travel · transit_station, parking→transfer · friend_family, bar, religious→social · medical, pharmacy→medical · bank, civic→personal_business · other→none</td></tr>
+</table></div>
+
+<h2>Fields that are never read</h2>
+<p>The whole file is sensitive, but these columns are personal text or identifiers that the importer never loads into memory
+at all: <code>places.address</code>, <code>places.notes</code>, <code>visits.notes</code>, <code>trips.notes</code>,
+<code>stamps.note</code>, <code>expenses.note</code>, <code>audit_log.old_value</code>, <code>audit_log.new_value</code>,
+<code>flights.booking_reference</code>, <code>flights.seat</code>, and <code>raw_location_points</code> outside a selected
+trip's window. What can reach a share card is described on <a href="replay-and-share.html">Replay &amp; share</a>.</p>
+
+<h2 id="schema-versions">Schema versions</h2>
+<div class="table-wrap"><table>
+  <tr><th><code>user_version</code></th><th>Migration</th><th>Effect on TripLibreLab</th></tr>
+  <tr><td>1</td><td>Initial schema</td><td>Baseline; everything required is present.</td></tr>
+  <tr><td>2</td><td><code>places.deleted</code></td><td>Filter deleted places when the column exists.</td></tr>
+  <tr><td>3</td><td><code>stamps</code> table</td><td>Ignored in V0.1.</td></tr>
+  <tr><td>4</td><td><code>v_trips</code> redefined for more categories</td><td>Default-purpose table above.</td></tr>
+  <tr><td>5</td><td><code>places.category_custom</code></td><td>Label only.</td></tr>
+  <tr><td>6</td><td><code>expenses</code> table (TripLibre 2.1.0, current)</td><td>Ignored.</td></tr>
+</table></div>
+
+<h2>Open decisions</h2>
+<ol>
+  <li>Import a newer-than-6 schema with a notice (recommended), or refuse it?</li>
+  <li>List only dates with trips (recommended for V0.1), or also stay-only dates?</li>
+  <li>Default redaction settings for the share card.</li>
+  <li>Who runs <code>tools/inspect_export.py</code> on a real export and attaches the counts to the contract. <span class="status planned">Pending</span></li>
+</ol>
+
+</article></main>
+</body>
+</html>

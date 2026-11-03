@@ -1,0 +1,132 @@
+name: PR Preview (Vercel)
+
+# Deploys the docs/ site (triplibrelab.hhtdiary.org) to a Vercel preview URL for each PR, as TripLibre does.
+# Production stays on GitHub Pages; Vercel is only used for previews.
+# Needs the VERCEL_ORG_ID, VERCEL_PROJECT_ID and VERCEL_TOKEN repository secrets. Until they are set, the job
+# reports "preview not configured" and succeeds, so CI stays green.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "docs/**"
+      - "vercel.json"
+      - ".github/workflows/pr-preview.yml"
+
+# One preview per PR; a new push cancels the in-flight deploy.
+concurrency:
+  group: vercel-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    name: Deploy preview
+    runs-on: ubuntu-latest
+    # Secrets are not exposed to PRs opened from forks, so skip those.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+    steps:
+      - name: Check that the Vercel secrets are configured
+        id: cfg
+        run: |
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Preview not configured: add VERCEL_ORG_ID, VERCEL_PROJECT_ID and VERCEL_TOKEN as repository secrets." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - uses: actions/checkout@v7
+        if: steps.cfg.outputs.enabled == 'true'
+
+      - uses: actions/setup-node@v7
+        if: steps.cfg.outputs.enabled == 'true'
+        with:
+          node-version: 22
+
+      - name: Install Vercel CLI
+        if: steps.cfg.outputs.enabled == 'true'
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel project settings
+        if: steps.cfg.outputs.enabled == 'true'
+        run: vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+
+      - name: Build
+        if: steps.cfg.outputs.enabled == 'true'
+        run: vercel build --token="$VERCEL_TOKEN"
+
+      - name: Deploy
+        if: steps.cfg.outputs.enabled == 'true'
+        id: deploy
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          url=$(vercel deploy --prebuilt --archive=tgz \
+            --token="$VERCEL_TOKEN" \
+            --meta "githubPrNumber=$PR_NUMBER" \
+            --meta "githubCommitSha=$SHA")
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment preview URL on the PR
+        if: steps.cfg.outputs.enabled == 'true'
+        uses: actions/github-script@v9
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+        with:
+          script: |
+            const marker = '<!-- vercel-pr-preview -->';
+            const url = process.env.PREVIEW_URL;
+            const sha = context.payload.pull_request.head.sha.slice(0, 7);
+            const pages = [
+              ['TripLibreLab overview', '/index.html'],
+              ['Docs', '/docs/'],
+              ['Getting started', '/docs/getting-started.html'],
+              ['Importing a TripLibre export', '/docs/importing-data.html'],
+              ['Developer guide', '/docs/developer.html'],
+              ['SQLite data contract', '/docs/data-contract.html'],
+              ['Roadmap', '/roadmap/'],
+            ];
+            const list = pages
+              .map(([name, path]) => `- [${name}](${url}${path})`)
+              .join('\n');
+            const body = [
+              marker,
+              '### 🔍 Preview deployment',
+              '',
+              `**${url}**`,
+              '',
+              list,
+              '',
+              `<sub>Commit \`${sha}\` · updated ${new Date().toISOString()}</sub>`,
+            ].join('\n');
+
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number }
+            );
+            const existing = comments.find(
+              (c) => c.user.type === 'Bot' && c.body.includes(marker)
+            );
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner, repo, comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number, body,
+              });
+            }

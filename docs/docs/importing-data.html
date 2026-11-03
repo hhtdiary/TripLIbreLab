@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Importing a TripLibre export · TripLibreLab Docs</title>
-<meta name="description" content="Which TripLibre export file TripLibreLab reads, how it is opened, what it needs from the data, and what happens when a file can't be used.">
+<meta name="description" content="Which TripLibre export file TripLibreLab reads, how it is checked and opened, which database versions it supports, what it needs from the data, and what happens when a file can't be used.">
 <link rel="icon" href="../assets/triplibrelab-logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400..800,0..100&family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Caveat:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/docs.css?v=3">
 <script>try { const t = localStorage.getItem('hht-docs-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
-<script src="../assets/docs.js?v=1" defer></script>
+<script src="../assets/docs.js?v=2" defer></script>
 </head>
 <body>
 <main class="dx-main"><article class="dx-content">
@@ -20,59 +20,82 @@
 <p class="lede">TripLibreLab reads the SQLite database that TripLibre includes in every export. It opens a copy read-only,
 checks it, and turns it into days, trips and stops it can replay.</p>
 
-<div class="callout warn"><div class="ic">!</div>
-<p>The importer is being built against TripLibre's real database. Exact table and field mappings, supported versions and
-error messages will be documented here once they have been verified against a real export; until then they are marked
-<span class="status planned">Pending</span>.</p></div>
+<div class="callout note"><div class="ic">i</div>
+<p>The tables, fields and checks on this page come from TripLibre's own database code and are written up in full in the
+<a href="data-contract.html">SQLite data contract</a>. The importer itself is not built yet, so the behaviour described
+here is the specification it will be tested against, marked <span class="status planned">Pending</span> until it is.</p></div>
 
 <h2>Which file</h2>
 <p>Use <code>travel.sqlite</code> from a TripLibre export folder (<code>hht-export-YYYYMMDD-HHMMSS/</code>). It is a complete
 snapshot of TripLibre's database. TripLibreLab does not read the export's CSV, JSON or GeoJSON files.</p>
-<p>A few facts about this file come from TripLibre's own documentation and do not depend on TripLibreLab:</p>
+<p>What TripLibre's code says about this file:</p>
 <ul>
-  <li>Timestamps ending in <code>_ts</code> are UTC Unix seconds.</li>
-  <li>The schema version is stored in SQLite's <code>PRAGMA user_version</code>, and TripLibre's migrations only ever add to the schema.</li>
-  <li>Deleted rows are kept with <code>deleted = 1</code> rather than removed.</li>
+  <li>It is written with SQLite's <code>VACUUM INTO</code>, so it is one self-contained file that can be opened without any companion files.</li>
+  <li>It is always the <b>whole</b> database, including raw GPS points and deleted records, whatever range you chose when exporting.</li>
+  <li>Timestamps ending in <code>_ts</code> are UTC Unix seconds; each record carries the time zone (<code>tz</code>) it was made in.</li>
+  <li>The schema version is stored in <code>PRAGMA user_version</code>, and TripLibre's migrations only ever add to the schema.</li>
+  <li>Deleted rows are kept with <code>deleted = 1</code> rather than removed. TripLibreLab never shows them.</li>
 </ul>
 <p>For every table and column, see TripLibre's <a href="https://triplibre.hhtdiary.org/docs/data-dictionary.html">Data dictionary</a>.</p>
 
-<h2>How the file is opened</h2>
+<h2>Supported versions</h2>
+<div class="table-wrap"><table>
+  <tr><th>TripLibre database version (<code>user_version</code>)</th><th>TripLibreLab</th></tr>
+  <tr><td><b>1 to 6</b> (every TripLibre release up to 2.1.0)</td><td>Imports. Older versions simply lack a few optional tables, which TripLibreLab does not need.</td></tr>
+  <tr><td><b>Newer than 6</b></td><td>Imports with a notice that the file comes from a newer TripLibre, as long as the tables it needs are present. (Recommended policy; final decision pending.)</td></tr>
+  <tr><td><b>0</b>, or missing tables</td><td>Not a TripLibre export. See <a href="#when-a-file-cant-be-read">below</a>.</td></tr>
+</table></div>
+
+<h2>How the file is opened <span class="status planned">Pending</span></h2>
 <ol class="steps">
   <li><b>You choose it</b>Through the iOS Files picker. TripLibreLab cannot see any file you have not picked.</li>
-  <li><b>It is opened read-only</b>The original export is never modified.</li>
-  <li><b>It is checked before it is read</b>TripLibreLab checks that the file is a SQLite database, reads its schema version, and confirms the tables it needs are present before querying anything.</li>
-  <li><b>It is normalised</b>Records are converted into the app's own model: diary days, trips, stays and track points, with dates in the right time zone.</li>
+  <li><b>It is copied and opened read-only</b>The copy lives only inside the app. The original export is never modified, and the copy is never written to either.</li>
+  <li><b>It is checked before it is read</b>In order: is it a SQLite file; is it intact; does it have the <code>trips</code>, <code>visits</code> and <code>places</code> tables with the columns TripLibreLab needs; which schema version is it; does it contain any trips. The first failed check stops the import with a plain-language reason.</li>
+  <li><b>It is normalised</b>Records are converted into the app's own model: diary days, trips, stays and track points, with dates in each record's own time zone.</li>
 </ol>
 
-<h2>What TripLibreLab needs from the data <span class="status planned">Pending</span></h2>
+<h2>What TripLibreLab needs from the data</h2>
 <div class="table-wrap"><table>
-  <tr><th>Need</th><th>Why</th><th>Status</th></tr>
-  <tr><td><b>Trip and stay start and end times</b></td><td>To order the day and drive the timeline.</td><td><span class="status planned">Pending</span></td></tr>
-  <tr><td><b>Coordinates</b></td><td>To place stays and draw trips on the map.</td><td><span class="status planned">Pending</span></td></tr>
-  <tr><td><b>Links between trips and stays</b></td><td>To know where each trip started and ended.</td><td><span class="status planned">Pending</span></td></tr>
-  <tr><td><b>Recorded route geometry</b> (optional)</td><td>To replay the actual path. Without it, trips are drawn as schematic lines.</td><td><span class="status planned">Pending</span></td></tr>
-  <tr><td><b>Travel mode, place names</b> (optional)</td><td>Labels on the timeline and map.</td><td><span class="status planned">Pending</span></td></tr>
+  <tr><th>Need</th><th>Why</th><th>Where it comes from</th></tr>
+  <tr><td><b>Trip and stay start and end times</b></td><td>To order the day and drive the timeline.</td><td><code>trips.departure_ts / arrival_ts</code>, <code>visits.arrival_ts / departure_ts</code>, with each row's <code>tz</code></td></tr>
+  <tr><td><b>Coordinates</b></td><td>To place stays and draw trips on the map.</td><td><code>visits.lat / lon</code> (the stay's centroid), else <code>places.lat / lon</code></td></tr>
+  <tr><td><b>Links between trips and stays</b></td><td>To know where each trip started and ended.</td><td><code>trips.origin_visit_id / destination_visit_id</code>, else <code>trips.origin_place_id / destination_place_id</code> for hand-made or imported trips</td></tr>
+  <tr><td><b>Recorded route geometry</b> (optional)</td><td>To draw and replay the actual path.</td><td><code>trips.route_polyline</code> for the shape; <code>raw_location_points</code> inside the trip's time window for timed movement</td></tr>
+  <tr><td><b>Travel mode, purpose, place names</b> (optional)</td><td>Labels on the timeline and map.</td><td><code>mode_user</code>, else <code>mode_auto</code>; <code>trip_segments</code> for multimodal trips; <code>places.name / category</code></td></tr>
 </table></div>
-<p>The exact source tables and columns for each row will be listed in the data contract once it has been checked against a real export.</p>
+<p>Everything else in the file, including notes, addresses and the correction log, is left unread. The
+<a href="data-contract.html#fields-that-are-never-read">data contract</a> lists those fields.</p>
+
+<h2>Which days are listed</h2>
+<p>A diary day is a local calendar date, in the time zone the records were made in, with at least one trip that departed
+on it. A trip that leaves at 23:40 and arrives at 00:15 belongs to the day it left. The day picker shows each day's trip
+count. A date that is missing means TripLibre recorded no trips that day, not that no travel happened; recording may have
+been off.</p>
 
 <h2>Missing and partial data</h2>
-<p>Real diaries have gaps. The intended behaviour is:</p>
+<p>Real diaries have gaps. The behaviour, with the data it is based on:</p>
 <ul>
-  <li><b>A day with no travel records</b> is not offered in the day picker.</li>
-  <li><b>A trip without recorded points</b> is drawn between its start and end as a schematic line, labelled as such.</li>
+  <li><b>A day with no trips</b> is not offered in the day picker.</li>
+  <li><b>A trip with GPS points</b> is replayed on its recorded timestamps, labelled measured.</li>
+  <li><b>A trip with a stored route but no points</b> is drawn along its route with movement timed evenly between departure and arrival, and labelled as interpolated. TripLibre stores routes as shapes without timestamps.</li>
+  <li><b>A trip with no route</b> is drawn between its start and end as a dashed schematic line, labelled as such.</li>
+  <li><b>A trip with a recording gap</b> (TripLibre's <code>has_gap</code>) shows the straight connector across the gap dashed.</li>
+  <li><b>A stay that was still going on</b> when you exported has no end time and is shown as ongoing.</li>
   <li><b>A trip or stay without a location</b> stays on the timeline but is left off the map, and the app does not crash.</li>
   <li><b>An incomplete day</b> is shown with what exists; nothing is filled in or guessed.</li>
 </ul>
 
-<h2>When a file can't be read</h2>
+<h2 id="when-a-file-cant-be-read">When a file can't be read <span class="status planned">Pending</span></h2>
 <div class="table-wrap"><table>
   <tr><th>Problem</th><th>What you'll see</th></tr>
-  <tr><td><b>Not a SQLite file, or damaged</b></td><td>A message that the file could not be opened as a TripLibre database.</td></tr>
-  <tr><td><b>Unsupported schema version</b></td><td>A message naming the version found and the versions TripLibreLab supports, with a suggestion to update TripLibre or TripLibreLab.</td></tr>
-  <tr><td><b>A database that isn't from TripLibre</b></td><td>A message that the tables TripLibreLab expects are missing.</td></tr>
-  <tr><td><b>An empty diary</b></td><td>A message that the file contains no recorded days.</td></tr>
+  <tr><td><b>Not a SQLite file</b></td><td>"This file is not a SQLite database."</td></tr>
+  <tr><td><b>Damaged file</b></td><td>"The file could not be opened as a TripLibre database (damaged file)."</td></tr>
+  <tr><td><b>A database that isn't from TripLibre</b></td><td>"This SQLite file is not a TripLibre export (expected tables are missing)."</td></tr>
+  <tr><td><b>Newer schema version</b></td><td>A notice naming the version found and the latest version TripLibreLab was tested with; the import continues.</td></tr>
+  <tr><td><b>An empty diary</b></td><td>"This diary contains no recorded trips."</td></tr>
 </table></div>
-<p>Exact wording will be added once the importer is finished.</p>
+<p>The final wording will be confirmed when the importer is finished. Developers can run the same checks on any file
+today with <code>tools/inspect_export.py</code>; see the <a href="developer.html#check-an-export">developer guide</a>.</p>
 
 </article></main>
 </body>

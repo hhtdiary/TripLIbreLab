@@ -1,0 +1,32 @@
+{
+  "name": "triplibrelab-tooling",
+  "private": true,
+  "description": "Lint and accessibility tooling for the docs site (triplibrelab.hhtdiary.org) and repo Markdown. Mirrors TripLibre's setup; the app itself will be Swift (see Makefile).",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "lint": "npm run lint:js && npm run lint:css && npm run lint:html && npm run lint:md",
+    "lint:js": "eslint .",
+    "lint:css": "stylelint \"docs/**/*.css\"",
+    "lint:html": "html-validate \"docs/**/*.html\"",
+    "lint:md": "markdownlint-cli2",
+    "a11y": "node scripts/a11y.js",
+    "lint:fix": "eslint . --fix && stylelint \"docs/**/*.css\" --fix && markdownlint-cli2 --fix"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0",
+    "html-validate": "^11.16.4",
+    "markdownlint-cli2": "^0.23.3",
+    "playwright": "^1.64.1",
+    "stylelint": "^17.16.0",
+    "stylelint-config-standard": "^40.0.0"
+  },
+  "overrides": {
+    "markdown-it": "^15.0.2",
+    "smol-toml": "^1.9.0",
+    "katex": "^0.18.2"
+  }
+}
